@@ -38,6 +38,11 @@
 - Project milestones, task issues, and status updates are managed directly in GitHub (Milestones + Issues).
 - Before starting work, assign yourself to the relevant GitHub issue and update checklists as you progress.
 - Discuss scope changes or new tasks by commenting on or creating GitHub issues instead of editing local docs.
+- Mirror any task scope amendments back into the owning GitHub issue immediately (use the `gh` CLI or web UI).
+- When a subtask is delivered, tick its checkbox directly on the GitHub issue so status stays in sync.
+
+## Tooling Access
+- GitHub CLI (`gh`) is installed and authorized for this repository; prefer it for issue updates, reviews, and PR workflows.
 
 ## Security & Configuration Notes
 - Do not commit API keys; load provider tokens via environment variables (`.env` is ignored by default).
