@@ -39,7 +39,7 @@ using var tracerProvider = BuildTracerProvider(configuration);
 using var meterProvider = BuildMeterProvider(configuration);
 using var metrics = new TelnetServerMetrics();
 var localizationProvider = BuildLocalizationProvider();
-var sessionFactory = new GameSessionFactory(localizationProvider);
+var sessionFactory = new GameSessionFactory(localizationProvider, metrics);
 
 var endpoint = hostSettings.ToEndpoint();
 var server = new TelnetGameServer(endpoint, options, loggerFactory.CreateLogger<TelnetGameServer>(), metrics, sessionFactory);

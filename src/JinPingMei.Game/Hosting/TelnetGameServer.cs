@@ -41,7 +41,7 @@ public sealed class TelnetGameServer
         _options = options ?? new TelnetGameServerOptions();
         _logger = logger ?? NullLogger<TelnetGameServer>.Instance;
         _metrics = metrics ?? new NullTelnetServerMetrics();
-        _sessionFactory = sessionFactory ?? CreateDefaultSessionFactory();
+        _sessionFactory = sessionFactory ?? CreateDefaultSessionFactory(_metrics as ITelnetServerDiagnostics);
 
         if (_options.MaxConcurrentSessions <= 0)
         {
@@ -133,6 +133,7 @@ public sealed class TelnetGameServer
 
         var sessionEndStatus = ActivityStatusCode.Ok;
         string? sessionEndDescription = null;
+        var sessionFaulted = false;
 
         CancellationTokenSource? idleCts = null;
         CancellationTokenSource? heartbeatCts = null;
@@ -221,7 +222,21 @@ public sealed class TelnetGameServer
                             commandActivity.SetTag("telnet.command", trimmed);
                         }
 
-                        var commandResult = session.HandleInput(trimmed);
+                        var commandTimestamp = Stopwatch.GetTimestamp();
+                        CommandResult commandResult;
+                        try
+                        {
+                            commandResult = session.HandleInput(trimmed);
+                        }
+                        catch
+                        {
+                            var faultElapsed = Stopwatch.GetElapsedTime(commandTimestamp);
+                            _metrics.RecordCommand(faultElapsed, faulted: true);
+                            throw;
+                        }
+
+                        var elapsed = Stopwatch.GetElapsedTime(commandTimestamp);
+                        _metrics.RecordCommand(elapsed, faulted: false);
                         WriteCommandTelemetry(commandActivity, commandResult, trimmed);
 
                         foreach (var responseLine in commandResult.Lines)
@@ -246,6 +261,7 @@ public sealed class TelnetGameServer
                             continue;
                         }
 
+                        sessionFaulted = true;
                         _metrics.RecordInactivityTimeout();
                         using (var idleTimeoutActivity = StartChildActivity("telnet.session.idle_timeout", sessionContext))
                         {
@@ -284,6 +300,7 @@ public sealed class TelnetGameServer
                             continue;
                         }
 
+                        sessionFaulted = true;
                         _metrics.RecordLifetimeLimit();
                         using (var lifetimeActivity = StartChildActivity("telnet.session.lifetime_limit", sessionContext))
                         {
@@ -303,6 +320,7 @@ public sealed class TelnetGameServer
             _logger.LogDebug(ex, "Session from {Remote} closed due to I/O error", remote);
             sessionEndStatus = ActivityStatusCode.Error;
             sessionEndDescription = $"I/O error: {ex.Message}";
+            sessionFaulted = true;
             if (sessionActivity is not null)
             {
                 sessionActivity.SetStatus(ActivityStatusCode.Error, ex.Message);
@@ -317,6 +335,7 @@ public sealed class TelnetGameServer
             _logger.LogDebug(ex, "Session from {Remote} closed due to socket error", remote);
             sessionEndStatus = ActivityStatusCode.Error;
             sessionEndDescription = $"Socket error: {ex.Message}";
+            sessionFaulted = true;
             if (sessionActivity is not null)
             {
                 sessionActivity.SetStatus(ActivityStatusCode.Error, ex.Message);
@@ -331,6 +350,7 @@ public sealed class TelnetGameServer
             _logger.LogError(ex, "Unhandled exception while processing session from {Remote}", remote);
             sessionEndStatus = ActivityStatusCode.Error;
             sessionEndDescription = ex.Message;
+            sessionFaulted = true;
             if (sessionActivity is not null)
             {
                 sessionActivity.SetStatus(ActivityStatusCode.Error, ex.Message);
@@ -345,6 +365,7 @@ public sealed class TelnetGameServer
             idleCts?.Dispose();
             heartbeatCts?.Dispose();
             lifetimeCts?.Dispose();
+            _metrics.RecordSessionEnded(sessionFaulted);
             ReleaseSessionSlot();
             _logger.LogInformation("Session ended from {Remote}", remote);
             sessionActivity?.Dispose();
@@ -493,11 +514,12 @@ public sealed class TelnetGameServer
         }));
     }
 
-    private static IGameSessionFactory CreateDefaultSessionFactory()
+    private static IGameSessionFactory CreateDefaultSessionFactory(ITelnetServerDiagnostics? diagnostics)
     {
         var localizationPath = Path.Combine(AppContext.BaseDirectory, "Localization");
         var localizationProvider = new JsonLocalizationProvider(localizationPath);
-        return new GameSessionFactory(localizationProvider);
+        var diagnosticSource = diagnostics ?? new NullTelnetServerDiagnostics();
+        return new GameSessionFactory(localizationProvider, diagnosticSource);
     }
 
     private static void WriteCommandTelemetry(Activity? activity, CommandResult result, string input)
@@ -545,6 +567,10 @@ public sealed class TelnetGameServer
         {
         }
 
+        public void RecordSessionEnded(bool faulted)
+        {
+        }
+
         public void RecordRejected()
         {
         }
@@ -555,6 +581,32 @@ public sealed class TelnetGameServer
 
         public void RecordLifetimeLimit()
         {
+        }
+
+        public void RecordCommand(TimeSpan duration, bool faulted)
+        {
+        }
+    }
+
+    private sealed class NullTelnetServerDiagnostics : ITelnetServerDiagnostics
+    {
+        private readonly DateTimeOffset _started = DateTimeOffset.UtcNow;
+
+        public TelnetServerSnapshot CaptureSnapshot()
+        {
+            var now = DateTimeOffset.UtcNow;
+            return new TelnetServerSnapshot(
+                _started,
+                now - _started,
+                ActiveSessions: 0,
+                TotalSessions: 0,
+                CompletedSessions: 0,
+                RejectedSessions: 0,
+                SessionErrors: 0,
+                CommandErrors: 0,
+                InactivityTimeouts: 0,
+                LifetimeEnforcements: 0,
+                TotalCommands: 0);
         }
     }
 }

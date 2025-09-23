@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using JinPingMei.Game.Hosting;
 using JinPingMei.Game.Localization;
 using Microsoft.Extensions.Logging;
@@ -226,7 +228,7 @@ public class TelnetGameServerTests
 
     private TelnetGameServer CreateServer(IPEndPoint endpoint, TelnetGameServerOptions options)
     {
-        var sessionFactory = new GameSessionFactory(_localization);
+        var sessionFactory = new GameSessionFactory(_localization, _metrics);
         return new TelnetGameServer(endpoint, options, _logger, _metrics, sessionFactory);
     }
 
@@ -246,17 +248,78 @@ public class TelnetGameServerTests
         public record LogEntry(LogLevel Level, EventId EventId, string Message);
     }
 
-    private sealed class TestMetrics : ITelnetServerMetrics
+    private sealed class TestMetrics : ITelnetServerMetrics, ITelnetServerDiagnostics
     {
+        private readonly DateTimeOffset _started = DateTimeOffset.UtcNow;
+        private long _activeSessions;
+
         public int AcceptedSessions { get; private set; }
+        public int CompletedSessions { get; private set; }
         public int Rejections { get; private set; }
         public int InactivityTimeouts { get; private set; }
         public int LifetimeExpirations { get; private set; }
+        public int CommandCalls { get; private set; }
+        public int SessionErrorCount { get; private set; }
+        public int CommandErrorCount { get; private set; }
 
-        public void RecordAccepted() => AcceptedSessions++;
-        public void RecordRejected() => Rejections++;
-        public void RecordInactivityTimeout() => InactivityTimeouts++;
-        public void RecordLifetimeLimit() => LifetimeExpirations++;
+        public void RecordAccepted()
+        {
+            AcceptedSessions++;
+            Interlocked.Increment(ref _activeSessions);
+        }
+
+        public void RecordSessionEnded(bool faulted)
+        {
+            CompletedSessions++;
+            Interlocked.Decrement(ref _activeSessions);
+            if (faulted)
+            {
+                SessionErrorCount++;
+            }
+        }
+
+        public void RecordRejected()
+        {
+            Rejections++;
+        }
+
+        public void RecordInactivityTimeout()
+        {
+            InactivityTimeouts++;
+            SessionErrorCount++;
+        }
+
+        public void RecordLifetimeLimit()
+        {
+            LifetimeExpirations++;
+            SessionErrorCount++;
+        }
+
+        public void RecordCommand(TimeSpan duration, bool faulted)
+        {
+            CommandCalls++;
+            if (faulted)
+            {
+                CommandErrorCount++;
+            }
+        }
+
+        public TelnetServerSnapshot CaptureSnapshot()
+        {
+            var now = DateTimeOffset.UtcNow;
+            return new TelnetServerSnapshot(
+                _started,
+                now - _started,
+                ActiveSessions: Interlocked.Read(ref _activeSessions),
+                TotalSessions: AcceptedSessions,
+                CompletedSessions: CompletedSessions,
+                RejectedSessions: Rejections,
+                SessionErrors: SessionErrorCount,
+                CommandErrors: CommandErrorCount,
+                InactivityTimeouts: InactivityTimeouts,
+                LifetimeEnforcements: LifetimeExpirations,
+                TotalCommands: CommandCalls);
+        }
     }
 
 }
