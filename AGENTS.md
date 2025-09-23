@@ -5,10 +5,16 @@
 - `tests/` contains unit-test projects; today only `JinPingMei.Engine.Tests` verifies orchestration seams.
 - `data/source-texts/` stores reference materials such as the 《金瓶梅詞話（萬曆本）》 transcript. Treat this as read-only input.
 
+## Architecture & Performance Principles
+- First principle: keep the runtime lightweight, fast, and fault tolerant so one host can serve thousands of telnet users with minimal memory and CPU.
+- Target a lightweight, event-driven architecture tuned for high concurrency; prefer async/await and `Socket` APIs that minimize allocations.
+- Leverage .NET 9 server features (e.g., improved `TcpListener.AcceptTcpClientAsync`, cancellation tokens, `ValueTask`) to keep the telnet host responsive under load.
+- Design for graceful degradation: enforce per-session timeouts, guard critical sections, and fail fast on malformed input so one client cannot exhaust system resources.
+
 ## Build, Test, and Development Commands
 - `dotnet build JinPingMei.sln` compiles every project with the pinned .NET SDK (see `global.json`).
 - `dotnet test JinPingMei.sln` runs the xUnit suite and collects coverage via the default runner.
-- `dotnet run --project src/JinPingMei.Game` launches the prototype console experience.
+- `dotnet run --project src/JinPingMei.Game` starts the telnet server on `127.0.0.1:2323`; connect via `telnet 127.0.0.1 2323` from another terminal.
 
 ## Coding Style & Naming Conventions
 - Follow .NET conventions: PascalCase for public types/methods, camelCase for locals and private fields (prefix with `_` only for private fields, e.g., `_director`).

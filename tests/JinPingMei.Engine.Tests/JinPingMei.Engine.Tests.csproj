@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\JinPingMei.Engine\JinPingMei.Engine.csproj" />
+    <ProjectReference Include="..\..\src\JinPingMei.Game\JinPingMei.Game.csproj" />
   </ItemGroup>
 
 </Project>

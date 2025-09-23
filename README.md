@@ -46,8 +46,11 @@ The execution pipeline is under development. Once the initial engine lands, the 
  # - .NET SDK 8.0+
  # - Access token for the chosen LLM provider
 
-# run the console prototype (command will be added when the engine is committed)
- dotnet run --project src/JinPingMei.Game
+# run the telnet host (listens on 127.0.0.1:2323 by default)
+dotnet run --project src/JinPingMei.Game
+
+# connect from another terminal
+telnet 127.0.0.1 2323
 ```
 
 While infrastructure code is being authored, you can use this README as a reference for design goals, contribute narrative ideas, or help shape the engine architecture.
