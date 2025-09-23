@@ -8,8 +8,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JinPingMei.Engine;
-using JinPingMei.Game.Hosting.Commands;
-using JinPingMei.Game.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -23,7 +21,6 @@ public sealed class TelnetGameServer
     private readonly TelnetGameServerOptions _options;
     private readonly ILogger<TelnetGameServer> _logger;
     private readonly ITelnetServerMetrics _metrics;
-    private readonly IGameSessionFactory _sessionFactory;
     private TcpListener? _listener;
     private readonly List<Task> _clientTasks = new();
     private readonly object _sync = new();
@@ -34,14 +31,12 @@ public sealed class TelnetGameServer
         IPEndPoint endpoint,
         TelnetGameServerOptions? options = null,
         ILogger<TelnetGameServer>? logger = null,
-        ITelnetServerMetrics? metrics = null,
-        IGameSessionFactory? sessionFactory = null)
+        ITelnetServerMetrics? metrics = null)
     {
         _endpoint = endpoint;
         _options = options ?? new TelnetGameServerOptions();
         _logger = logger ?? NullLogger<TelnetGameServer>.Instance;
         _metrics = metrics ?? new NullTelnetServerMetrics();
-        _sessionFactory = sessionFactory ?? CreateDefaultSessionFactory();
 
         if (_options.MaxConcurrentSessions <= 0)
         {
@@ -152,13 +147,12 @@ public sealed class TelnetGameServer
                 NewLine = "\r\n"
             };
 
-            var session = _sessionFactory.Create();
+            var session = new GameSession(GameRuntime.CreateDefault());
 
             await writer.WriteLineAsync("歡迎來到《金瓶梅》互動敘事實驗。");
-            await writer.WriteLineAsync(" 輸入 '/help' 查看指令清單，輸入 '/quit' 離線。");
+            await writer.WriteLineAsync(" Type 'help' for prototype commands. Type 'quit' to disconnect.");
             await writer.WriteLineAsync(string.Empty);
             await writer.WriteLineAsync(session.RenderIntro());
-            await writer.WriteLineAsync(session.GetCommandHint());
 
             if (sessionActivity is not null)
             {
@@ -215,27 +209,30 @@ public sealed class TelnetGameServer
 
                         var trimmed = line.Trim();
 
+                        if (trimmed.Equals("quit", StringComparison.OrdinalIgnoreCase))
+                        {
+                            using var exitActivity = StartChildActivity("telnet.session.client_exit", sessionContext);
+                            exitActivity?.SetTag("telnet.command", trimmed);
+                            exitActivity?.SetStatus(ActivityStatusCode.Ok);
+                            await writer.WriteLineAsync("再見，期待下次相會。");
+                            return;
+                        }
+
                         using var commandActivity = StartChildActivity("telnet.command", sessionContext);
                         if (commandActivity is not null)
                         {
                             commandActivity.SetTag("telnet.command", trimmed);
                         }
 
-                        var commandResult = session.HandleInput(trimmed);
-                        WriteCommandTelemetry(commandActivity, commandResult, trimmed);
-
-                        foreach (var responseLine in commandResult.Lines)
+                        var response = session.HandleCommand(trimmed);
+                        var responseLength = response?.Length ?? 0;
+                        commandActivity?.SetTag("telnet.response.length", responseLength);
+                        commandActivity?.AddEvent(new ActivityEvent("command_processed", tags: new ActivityTagsCollection
                         {
-                            await writer.WriteLineAsync(responseLine);
-                        }
-
-                        if (commandResult.ShouldDisconnect)
-                        {
-                            using var exitActivity = StartChildActivity("telnet.session.client_exit", sessionContext);
-                            exitActivity?.SetTag("telnet.command", trimmed);
-                            exitActivity?.SetStatus(ActivityStatusCode.Ok);
-                            return;
-                        }
+                            { "telnet.command", trimmed },
+                            { "telnet.response.length", responseLength }
+                        }));
+                        await writer.WriteLineAsync(response);
                         break;
                     }
 
@@ -491,36 +488,6 @@ public sealed class TelnetGameServer
             { "exception.message", exception.Message },
             { "exception.stacktrace", exception.StackTrace ?? string.Empty }
         }));
-    }
-
-    private static IGameSessionFactory CreateDefaultSessionFactory()
-    {
-        var localizationPath = Path.Combine(AppContext.BaseDirectory, "Localization");
-        var localizationProvider = new JsonLocalizationProvider(localizationPath);
-        return new GameSessionFactory(localizationProvider);
-    }
-
-    private static void WriteCommandTelemetry(Activity? activity, CommandResult result, string input)
-    {
-        if (activity is null)
-        {
-            return;
-        }
-
-        var isCommand = input.StartsWith('/');
-        activity.SetTag("telnet.input.raw", input);
-        activity.SetTag("telnet.input.type", isCommand ? "command" : "story");
-
-        var totalLength = 0;
-        foreach (var line in result.Lines)
-        {
-            totalLength += line?.Length ?? 0;
-        }
-
-        activity.SetTag("telnet.response.line_count", result.Lines.Count);
-        activity.SetTag("telnet.response.length", totalLength);
-        activity.SetTag("telnet.session.disconnect", result.ShouldDisconnect);
-        activity.SetStatus(ActivityStatusCode.Ok);
     }
 
     private static IPEndPoint? TryGetRemoteEndPoint(TcpClient client, out string? display)
