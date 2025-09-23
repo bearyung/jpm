@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using JinPingMei.Game.Hosting;
+using JinPingMei.Game.Localization;
 using Microsoft.Extensions.Logging;
 
 namespace JinPingMei.Engine.Tests;
@@ -10,6 +12,7 @@ public class TelnetGameServerTests
 {
     private readonly TestLogger<TelnetGameServer> _logger = new();
     private readonly TestMetrics _metrics = new();
+    private readonly ILocalizationProvider _localization = new TestLocalizationProvider();
 
     [Fact]
     public async Task Connect_WhenServerAtCapacity_ReceivesBusyMessage()
@@ -120,8 +123,12 @@ public class TelnetGameServerTests
 
         await ReadIntroAsync(reader);
 
-        await writer.WriteLineAsync("help");
-        await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(1));
+        await writer.WriteLineAsync("/help");
+        var helpLine1 = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(1));
+        var helpLine2 = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.Contains("/help", helpLine1 ?? string.Empty);
+        Assert.False(string.IsNullOrWhiteSpace(helpLine2));
 
         var lifetimeLine = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(2));
         Assert.Contains(options.LifetimeExceededMessage, lifetimeLine ?? string.Empty);
@@ -183,7 +190,7 @@ public class TelnetGameServerTests
 
     private static async Task ReadIntroAsync(StreamReader reader)
     {
-        for (var i = 0; i < 4; i++)
+        for (var i = 0; i < 5; i++)
         {
             await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(2));
         }
@@ -219,7 +226,8 @@ public class TelnetGameServerTests
 
     private TelnetGameServer CreateServer(IPEndPoint endpoint, TelnetGameServerOptions options)
     {
-        return new TelnetGameServer(endpoint, options, _logger, _metrics);
+        var sessionFactory = new GameSessionFactory(_localization);
+        return new TelnetGameServer(endpoint, options, _logger, _metrics, sessionFactory);
     }
 
     private sealed class TestLogger<T> : ILogger<T>
@@ -250,4 +258,5 @@ public class TelnetGameServerTests
         public void RecordInactivityTimeout() => InactivityTimeouts++;
         public void RecordLifetimeLimit() => LifetimeExpirations++;
     }
+
 }

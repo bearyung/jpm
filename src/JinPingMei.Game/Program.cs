@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using JinPingMei.Game.Hosting;
+using JinPingMei.Game.Localization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using dotenv.net;
@@ -37,9 +38,11 @@ using var loggerFactory = LoggerFactory.Create(static builder =>
 using var tracerProvider = BuildTracerProvider(configuration);
 using var meterProvider = BuildMeterProvider(configuration);
 using var metrics = new TelnetServerMetrics();
+var localizationProvider = BuildLocalizationProvider();
+var sessionFactory = new GameSessionFactory(localizationProvider);
 
 var endpoint = hostSettings.ToEndpoint();
-var server = new TelnetGameServer(endpoint, options, loggerFactory.CreateLogger<TelnetGameServer>(), metrics);
+var server = new TelnetGameServer(endpoint, options, loggerFactory.CreateLogger<TelnetGameServer>(), metrics, sessionFactory);
 
 using var cts = new CancellationTokenSource();
 
@@ -188,4 +191,10 @@ static void LoadEnvFiles()
 
         DotEnv.Load(new DotEnvOptions(envFilePaths: new[] { path }, overwriteExistingVars: true, ignoreExceptions: true));
     }
+}
+
+static JsonLocalizationProvider BuildLocalizationProvider()
+{
+    var localizationPath = Path.Combine(AppContext.BaseDirectory, "Localization");
+    return new JsonLocalizationProvider(localizationPath);
 }
