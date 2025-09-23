@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JinPingMei.Game.Localization;
 
@@ -42,18 +43,29 @@ public sealed class CommandRouter
         return CommandResult.FromMessage(context.Localize("commands.unknown"));
     }
 
-    public static CommandRouter CreateDefault(ILocalizationProvider localization)
+    public static CommandRouter CreateDefault(ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics, IEnumerable<ICommandHandler>? additionalHandlers = null)
     {
         _ = localization ?? throw new ArgumentNullException(nameof(localization));
+        _ = diagnostics ?? throw new ArgumentNullException(nameof(diagnostics));
 
-        var handlers = new ICommandHandler[]
+        var handlers = new List<ICommandHandler>
         {
             new HelpCommandHandler(),
             new NameCommandHandler(),
             new LookCommandHandler(),
             new SayCommandHandler(),
             new QuitCommandHandler(),
+            new DiagnosticsCommandHandler(diagnostics),
+            new HealthCommandHandler(diagnostics)
         };
+
+        if (additionalHandlers is not null)
+        {
+            foreach (var handler in additionalHandlers)
+            {
+                handlers.Add(handler);
+            }
+        }
 
         return new CommandRouter(handlers);
     }
@@ -77,14 +89,18 @@ public sealed record CommandResult(IReadOnlyList<string> Lines, bool ShouldDisco
 public sealed class CommandContext
 {
     private readonly ILocalizationProvider _localization;
+    private readonly ITelnetServerDiagnostics _diagnostics;
 
-    public CommandContext(SessionState session, ILocalizationProvider localization)
+    public CommandContext(SessionState session, ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics)
     {
-        Session = session;
-        _localization = localization;
+        Session = session ?? throw new ArgumentNullException(nameof(session));
+        _localization = localization ?? throw new ArgumentNullException(nameof(localization));
+        _diagnostics = diagnostics ?? throw new ArgumentNullException(nameof(diagnostics));
     }
 
     public SessionState Session { get; }
+
+    public ITelnetServerDiagnostics Diagnostics => _diagnostics;
 
     public string Localize(string key)
     {

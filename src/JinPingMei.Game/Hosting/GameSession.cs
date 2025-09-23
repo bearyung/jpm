@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using JinPingMei.Engine;
 using JinPingMei.Game.Hosting.Commands;
 using JinPingMei.Game.Localization;
@@ -12,13 +14,14 @@ public sealed class GameSession
     private readonly CommandRouter _commandRouter;
     private readonly CommandContext _commandContext;
 
-    public GameSession(GameRuntime runtime, ILocalizationProvider localization)
+    public GameSession(GameRuntime runtime, ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics, IEnumerable<ICommandHandler>? additionalHandlers = null)
     {
-        _runtime = runtime;
-        _localization = localization;
+        _runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
+        _localization = localization ?? throw new ArgumentNullException(nameof(localization));
+        _ = diagnostics ?? throw new ArgumentNullException(nameof(diagnostics));
         _state = new SessionState { Locale = localization.DefaultLocale };
-        _commandRouter = CommandRouter.CreateDefault(localization);
-        _commandContext = new CommandContext(_state, localization);
+        _commandRouter = CommandRouter.CreateDefault(localization, diagnostics, additionalHandlers);
+        _commandContext = new CommandContext(_state, localization, diagnostics);
     }
 
     public SessionState State => _state;

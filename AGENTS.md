@@ -47,3 +47,7 @@
 ## Security & Configuration Notes
 - Do not commit API keys; load provider tokens via environment variables (`.env` is ignored by default).
 - Sensitive source texts remain in `data/`; avoid exporting or publishing them without confirming licensing obligations.
+
+## Agent Workflow Notes
+- Before running integration smoke tests, stop any existing processes holding the telnet testing ports to avoid `Address already in use` errors.
+- Run long-lived commands (for example `dotnet run`, `npm run dev`) in a separate shell or launch them in the background so they never block other automation steps.
