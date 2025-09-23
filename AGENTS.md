@@ -31,6 +31,11 @@
 - Squash obvious fix-up commits locally when possible; each commit should remain buildable.
 - PRs should explain the narrative or technical impact, link to discussion issues, and include test evidence (`dotnet test` output or screenshots for console flows).
 
+## Planning & Tracking
+- Project milestones, task issues, and status updates are managed directly in GitHub (Milestones + Issues).
+- Before starting work, assign yourself to the relevant GitHub issue and update checklists as you progress.
+- Discuss scope changes or new tasks by commenting on or creating GitHub issues instead of editing local docs.
+
 ## Security & Configuration Notes
 - Do not commit API keys; load provider tokens via environment variables (`.env` is ignored by default).
 - Sensitive source texts remain in `data/`; avoid exporting or publishing them without confirming licensing obligations.
