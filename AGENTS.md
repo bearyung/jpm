@@ -24,12 +24,15 @@
 ## Testing Guidelines
 - xUnit is the primary unit-testing framework; place new suites under `tests/` mirroring the namespace of the code under test.
 - Name tests using `MethodUnderTest_Expectation` (e.g., `RenderIntro_ReturnsContent`).
+- Practice test-driven development: design the necessary tests for every milestone, task, and sub-task before implementation, then run them after the work to confirm behaviour.
 - Ensure tests run via `dotnet test` before submitting changes; add targeted coverage when extending orchestration or AI integration.
 
 ## Commit & Pull Request Practices
+- Start each task on a dedicated branch; ensure the branch builds and tests cleanly before opening a PR.
 - Use concise, imperative subject lines (~50 chars) similar to `Bootstrap solution structure and add source text`.
 - Squash obvious fix-up commits locally when possible; each commit should remain buildable.
 - PRs should explain the narrative or technical impact, link to discussion issues, and include test evidence (`dotnet test` output or screenshots for console flows).
+- Expect a smoke test during review; once it passes, merge the PR back to `main`.
 
 ## Planning & Tracking
 - Project milestones, task issues, and status updates are managed directly in GitHub (Milestones + Issues).
