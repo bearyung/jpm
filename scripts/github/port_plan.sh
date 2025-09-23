@@ -114,8 +114,7 @@ Stabilize telnet connections under high concurrency.
 - [ ] Implement per-session idle timeout, heartbeat pings, and graceful disconnects.
 - [ ] Add structured logging for connection lifecycle and error events.
 - [ ] Wrap networking calls with cancellation and exception guards.
-
-Reference: PROJECT_PLAN.md" "Milestone 1 – Telnet Core Prototype" "milestone-1"
+" "Milestone 1 – Telnet Core Prototype" "milestone-1"
 
 create_issue "M1 Task 1.2 – Interactive Command Loop" "## Goal
 Introduce a modular command loop with localized responses.
@@ -125,8 +124,7 @@ Introduce a modular command loop with localized responses.
 - [ ] Implement commands: help, name, look, say, quit (Traditional Chinese copy).
 - [ ] Persist minimal session state (player name, locale, interaction flags).
 - [ ] Localize prompts using resource files with zh-TW default.
-
-Reference: PROJECT_PLAN.md" "Milestone 1 – Telnet Core Prototype" "milestone-1"
+" "Milestone 1 – Telnet Core Prototype" "milestone-1"
 
 create_issue "M1 Task 1.3 – Observability & Diagnostics" "## Goal
 Expose operational insights for live telnet sessions.
@@ -135,8 +133,7 @@ Expose operational insights for live telnet sessions.
 - [ ] Add admin diagnostics command showing session counts, uptime, error totals.
 - [ ] Emit EventCounters for active connections and command latency.
 - [ ] Provide lightweight health probe or self-check command.
-
-Reference: PROJECT_PLAN.md" "Milestone 1 – Telnet Core Prototype" "milestone-1"
+" "Milestone 1 – Telnet Core Prototype" "milestone-1"
 
 create_issue "M2 Task 2.1 – World & Scene Model" "## Goal
 Model locales and deterministic scene traversal.
@@ -145,8 +142,7 @@ Model locales and deterministic scene traversal.
 - [ ] Define domain types for locales, scenes, transitions, and NPCs.
 - [ ] Seed starter district data set (5+ scenes) in structured files.
 - [ ] Wire GameSession to support navigation commands (go, examine).
-
-Reference: PROJECT_PLAN.md" "Milestone 2 – Narrative Engine Foundations" "milestone-2"
+" "Milestone 2 – Narrative Engine Foundations" "milestone-2"
 
 create_issue "M2 Task 2.2 – Content Pipeline" "## Goal
 Transform the 萬曆本 transcript into structured content packs.
@@ -155,8 +151,7 @@ Transform the 萬曆本 transcript into structured content packs.
 - [ ] Parse source text into chapters and candidate scenes with metadata tags.
 - [ ] Build tooling to curate and export lore bundles into JinPingMei.Content.
 - [ ] Document pipeline usage and regeneration workflow.
-
-Reference: PROJECT_PLAN.md" "Milestone 2 – Narrative Engine Foundations" "milestone-2"
+" "Milestone 2 – Narrative Engine Foundations" "milestone-2"
 
 create_issue "M2 Task 2.3 – Persistence Layer Prototype" "## Goal
 Persist player progress and transcripts.
@@ -165,8 +160,7 @@ Persist player progress and transcripts.
 - [ ] Introduce SQLite-backed repositories with migration strategy.
 - [ ] Implement save/resume commands and integration tests.
 - [ ] Document schema and backup considerations.
-
-Reference: PROJECT_PLAN.md" "Milestone 2 – Narrative Engine Foundations" "milestone-2"
+" "Milestone 2 – Narrative Engine Foundations" "milestone-2"
 
 create_issue "M3 Task 3.1 – Prompting & Provider Abstraction" "## Goal
 Define prompt flows and provider interfaces for AI narration.
@@ -175,8 +169,7 @@ Define prompt flows and provider interfaces for AI narration.
 - [ ] Design prompt templates that blend scene metadata and player history.
 - [ ] Implement IAiProvider with mock and OpenAI-backed versions.
 - [ ] Handle streaming/chunked responses for telnet delivery.
-
-Reference: PROJECT_PLAN.md" "Milestone 3 – AI Orchestration" "milestone-3"
+" "Milestone 3 – AI Orchestration" "milestone-3"
 
 create_issue "M3 Task 3.2 – Safety & Moderation Filters" "## Goal
 Enforce content safety before presenting AI output.
@@ -185,8 +178,7 @@ Enforce content safety before presenting AI output.
 - [ ] Integrate keyword/sentiment filters for AI responses.
 - [ ] Provide deterministic fallbacks when content is rejected.
 - [ ] Log moderated events with PII stripping.
-
-Reference: PROJECT_PLAN.md" "Milestone 3 – AI Orchestration" "milestone-3"
+" "Milestone 3 – AI Orchestration" "milestone-3"
 
 create_issue "M3 Task 3.3 – Caching & Throttling" "## Goal
 Control AI usage costs while maintaining responsiveness.
@@ -195,8 +187,7 @@ Control AI usage costs while maintaining responsiveness.
 - [ ] Cache common prompts/responses using bounded LRU cache.
 - [ ] Apply per-session rate limits and error backoff.
 - [ ] Surface cache/throttle metrics via diagnostics.
-
-Reference: PROJECT_PLAN.md" "Milestone 3 – AI Orchestration" "milestone-3"
+" "Milestone 3 – AI Orchestration" "milestone-3"
 
 create_issue "M4 Task 4.1 – Security & Access Control" "## Goal
 Secure external access and consent flows.
@@ -205,8 +196,7 @@ Secure external access and consent flows.
 - [ ] Evaluate SSH support or TLS reverse proxy strategy.
 - [ ] Add token-based login / quota enforcement.
 - [ ] Implement consent and content warning flow.
-
-Reference: PROJECT_PLAN.md" "Milestone 4 – Production Hardening" "milestone-4"
+" "Milestone 4 – Production Hardening" "milestone-4"
 
 create_issue "M4 Task 4.2 – Performance & Load Testing" "## Goal
 Validate scalability targets and optimize runtime resource usage.
@@ -215,8 +205,7 @@ Validate scalability targets and optimize runtime resource usage.
 - [ ] Build load generator to simulate thousands of telnet clients.
 - [ ] Profile CPU/memory and optimize allocations.
 - [ ] Automate stress tests and report trends.
-
-Reference: PROJECT_PLAN.md" "Milestone 4 – Production Hardening" "milestone-4"
+" "Milestone 4 – Production Hardening" "milestone-4"
 
 create_issue "M4 Task 4.3 – Deployment & Operations" "## Goal
 Prepare containerized deployment and observability tooling.
@@ -225,7 +214,6 @@ Prepare containerized deployment and observability tooling.
 - [ ] Containerize the service with minimal base image.
 - [ ] Provide deployment manifests (Docker Compose / Kubernetes).
 - [ ] Configure observability stack and monitoring dashboards.
-
-Reference: PROJECT_PLAN.md" "Milestone 4 – Production Hardening" "milestone-4"
+" "Milestone 4 – Production Hardening" "milestone-4"
 
 echo "All milestones and issues have been processed."
