@@ -67,6 +67,20 @@ telnet 127.0.0.1 2325
 nc 127.0.0.1 2325
 ```
 
+## Content Pipeline
+
+Use the pipeline to produce reusable chapter artifacts (and optional LLM prompt templates) from any long-form transcript:
+
+```bash
+# Extract chapters into JSON files
+dotnet run --project src/JinPingMei.ContentPipeline
+
+# Emit an analysis prompt template for a specific chapter
+dotnet run --project src/JinPingMei.ContentPipeline --mode template --chapter chapter-015
+```
+
+Details and integration guidance live in `docs/content-pipeline.md`.
+
 ### Important Connection Notes for Contributors
 
 The server implements proper telnet negotiation for character-at-a-time mode and server-side echo to support:
