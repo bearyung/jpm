@@ -146,12 +146,16 @@ public sealed class TelnetGameServer
             connection.NoDelay = true;
             using var stream = connection.GetStream();
             using var registration = cancellationToken.Register(() => connection.Close());
-            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, bufferSize: 1024, leaveOpen: true);
             using var writer = new StreamWriter(stream, Encoding.UTF8, bufferSize: 1024, leaveOpen: true)
             {
                 AutoFlush = true,
                 NewLine = "\r\n"
             };
+
+            var inputProcessor = new TelnetInputProcessor(stream, writer);
+
+            // Initialize telnet negotiation for character mode and server echo
+            await inputProcessor.InitializeNegotiationAsync(cancellationToken);
 
             var session = _sessionFactory.Create();
 
@@ -191,7 +195,7 @@ public sealed class TelnetGameServer
                     : null;
                 var heartbeatTask = heartbeatCts is null ? null : Task.Delay(_options.HeartbeatInterval, heartbeatCts.Token);
 
-                var readTask = reader.ReadLineAsync();
+                var readTask = inputProcessor.ReadLineAsync(cancellationToken);
 
                 while (true)
                 {
