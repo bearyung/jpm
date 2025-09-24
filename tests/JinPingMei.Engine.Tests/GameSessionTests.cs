@@ -34,6 +34,26 @@ public class GameSessionTests
     }
 
     [Fact]
+    public void Constructor_SetsInitialWorldState()
+    {
+        var session = CreateSession();
+
+        Assert.Equal("qinghe", session.State.CurrentLocaleId);
+        Assert.Equal("market", session.State.CurrentSceneId);
+    }
+
+    [Fact]
+    public void HandleInput_LookCommand_ReturnsSceneOverview()
+    {
+        var session = CreateSession();
+
+        var result = session.HandleInput("/look");
+
+        Assert.Contains(result.Lines, line => line.Contains("清河集市"));
+        Assert.Contains(result.Lines, line => line.Contains("可前往"));
+    }
+
+    [Fact]
     public void HandleInput_FreeText_ProducesPlaceholderNarration()
     {
         var session = CreateSession();
@@ -63,6 +83,49 @@ public class GameSessionTests
         var result = session.HandleInput("/dance");
 
         Assert.Contains("無法識別", result.Lines.Single());
+    }
+
+    [Fact]
+    public void HandleInput_GoCommand_MovesPlayerToTargetScene()
+    {
+        var session = CreateSession();
+
+        var result = session.HandleInput("/go 茶樓");
+
+        Assert.Equal("teahouse", session.State.CurrentSceneId);
+        Assert.Contains(result.Lines, line => line.Contains("會仙樓茶館"));
+    }
+
+    [Fact]
+    public void HandleInput_GoCommand_InvalidDestination()
+    {
+        var session = CreateSession();
+
+        var result = session.HandleInput("/go 月宮");
+
+        Assert.Contains("無法辨識", result.Lines.Single());
+    }
+
+    [Fact]
+    public void HandleInput_ExamineScene_ReturnsDetailedDescription()
+    {
+        var session = CreateSession();
+
+        var result = session.HandleInput("/examine scene");
+
+        Assert.Contains(result.Lines, line => line.Contains("可通往"));
+        Assert.Contains(result.Lines, line => line.Contains("叫賣的商販"));
+    }
+
+    [Fact]
+    public void HandleInput_ExamineNpc_ReturnsNpcInsight()
+    {
+        var session = CreateSession();
+
+        var result = session.HandleInput("/examine 商販");
+
+        Assert.Contains(result.Lines, line => line.Contains("你注視著"));
+        Assert.Contains(result.Lines, line => line.Contains("叫賣的商販"));
     }
 
     [Fact]

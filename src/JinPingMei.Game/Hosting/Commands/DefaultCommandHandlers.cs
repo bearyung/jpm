@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using JinPingMei.Content.World;
+
 namespace JinPingMei.Game.Hosting.Commands;
 
 public sealed class HelpCommandHandler : ICommandHandler
@@ -46,7 +51,62 @@ public sealed class LookCommandHandler : ICommandHandler
 
     public CommandResult Handle(CommandContext context, string arguments)
     {
-        return CommandResult.FromMessage(context.Localize("commands.look.description"));
+        var lines = WorldCommandFormatter.BuildLookLines(context);
+        return new CommandResult(lines, false);
+    }
+}
+
+public sealed class GoCommandHandler : ICommandHandler
+{
+    public string Command => "go";
+
+    public CommandResult Handle(CommandContext context, string arguments)
+    {
+        if (string.IsNullOrWhiteSpace(arguments))
+        {
+            return CommandResult.FromMessage(context.Localize("commands.go.prompt"));
+        }
+
+        if (context.World.TryMove(arguments, out var exit))
+        {
+            context.Session.CurrentLocaleId = context.World.CurrentLocale.Id;
+            context.Session.CurrentSceneId = context.World.CurrentScene.Id;
+
+            var lines = WorldCommandFormatter.BuildArrivalLines(context, exit);
+            return new CommandResult(lines, false);
+        }
+
+        return CommandResult.FromMessage(context.Localize("commands.go.unknown"));
+    }
+}
+
+public sealed class ExamineCommandHandler : ICommandHandler
+{
+    private static readonly string[] SceneKeywords = { "scene", "場景", "地點", "環境" };
+
+    public string Command => "examine";
+
+    public CommandResult Handle(CommandContext context, string arguments)
+    {
+        if (string.IsNullOrWhiteSpace(arguments))
+        {
+            return CommandResult.FromMessage(context.Localize("commands.examine.prompt"));
+        }
+
+        var normalized = arguments.Trim();
+        if (SceneKeywords.Any(keyword => keyword.Equals(normalized, StringComparison.OrdinalIgnoreCase)))
+        {
+            var lines = WorldCommandFormatter.BuildExamineSceneLines(context);
+            return new CommandResult(lines, false);
+        }
+
+        if (context.World.TryFindNpc(normalized, out var npc))
+        {
+            var lines = WorldCommandFormatter.BuildExamineNpcLines(context, npc);
+            return new CommandResult(lines, false);
+        }
+
+        return CommandResult.FromMessage(context.Localize("commands.examine.unknown"));
     }
 }
 
@@ -76,5 +136,114 @@ public sealed class QuitCommandHandler : ICommandHandler
     public CommandResult Handle(CommandContext context, string arguments)
     {
         return CommandResult.FromMessage(context.Localize("commands.quit.confirm"), shouldDisconnect: true);
+    }
+}
+
+internal static class WorldCommandFormatter
+{
+    public static IReadOnlyList<string> BuildLookLines(CommandContext context)
+    {
+        return BuildOverviewLines(context, includeHeader: true);
+    }
+
+    public static IReadOnlyList<string> BuildArrivalLines(CommandContext context, SceneExitDefinition exit)
+    {
+        var lines = new List<string>
+        {
+            context.Format("commands.go.transition", exit.DisplayName, context.World.CurrentScene.Name)
+        };
+        lines.AddRange(BuildOverviewLines(context, includeHeader: false));
+        return lines;
+    }
+
+    public static IReadOnlyList<string> BuildExamineSceneLines(CommandContext context)
+    {
+        var lines = new List<string>
+        {
+            context.Format("commands.examine.scene", context.World.CurrentScene.Name),
+            context.Format("commands.look.locale", context.World.CurrentLocale.Name, context.World.CurrentLocale.Summary),
+            context.World.CurrentScene.Description
+        };
+
+        AppendExitDetails(context, lines);
+        AppendNpcPresence(context, lines, detailed: true);
+
+        return lines;
+    }
+
+    public static IReadOnlyList<string> BuildExamineNpcLines(CommandContext context, NpcDefinition npc)
+    {
+        var lines = new List<string>
+        {
+            context.Format("commands.examine.npc", npc.Name),
+            npc.Description
+        };
+
+        return lines;
+    }
+
+    private static IReadOnlyList<string> BuildOverviewLines(CommandContext context, bool includeHeader)
+    {
+        var lines = new List<string>();
+
+        if (includeHeader)
+        {
+            lines.Add(context.Format("commands.look.header", context.World.CurrentScene.Name));
+        }
+
+        lines.Add(context.Format("commands.look.locale", context.World.CurrentLocale.Name, context.World.CurrentLocale.Summary));
+        lines.Add(context.World.CurrentScene.Description);
+
+        AppendNpcPresence(context, lines, detailed: false);
+        AppendExitSummary(context, lines);
+
+        return lines;
+    }
+
+    private static void AppendNpcPresence(CommandContext context, List<string> lines, bool detailed)
+    {
+        if (context.World.Npcs.Count == 0)
+        {
+            lines.Add(context.Localize("commands.look.no_npcs"));
+            return;
+        }
+
+        var names = string.Join("、", context.World.Npcs.Select(n => n.Name));
+        lines.Add(context.Format("commands.look.npcs", names));
+
+        if (detailed)
+        {
+            foreach (var npc in context.World.Npcs)
+            {
+                lines.Add(context.Format("commands.examine.npc_hint", npc.Name, npc.Description));
+            }
+        }
+    }
+
+    private static void AppendExitSummary(CommandContext context, List<string> lines)
+    {
+        if (context.World.Exits.Count == 0)
+        {
+            lines.Add(context.Localize("commands.look.no_exits"));
+            return;
+        }
+
+        var exits = string.Join("、", context.World.Exits.Select(e => e.DisplayName));
+        lines.Add(context.Format("commands.look.exits", exits));
+    }
+
+    private static void AppendExitDetails(CommandContext context, List<string> lines)
+    {
+        if (context.World.Exits.Count == 0)
+        {
+            lines.Add(context.Localize("commands.look.no_exits"));
+            return;
+        }
+
+        lines.Add(context.Localize("commands.examine.paths"));
+        foreach (var exit in context.World.Exits)
+        {
+            lines.Add(context.Format("commands.examine.path_detail", exit.DisplayName, exit.Description));
+        }
     }
 }

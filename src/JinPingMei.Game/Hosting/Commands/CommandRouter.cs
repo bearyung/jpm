@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JinPingMei.Game.Localization;
+using JinPingMei.Engine.World;
 
 namespace JinPingMei.Game.Hosting.Commands;
 
@@ -53,6 +54,8 @@ public sealed class CommandRouter
             new HelpCommandHandler(),
             new NameCommandHandler(),
             new LookCommandHandler(),
+            new GoCommandHandler(),
+            new ExamineCommandHandler(),
             new SayCommandHandler(),
             new QuitCommandHandler(),
             new DiagnosticsCommandHandler(diagnostics),
@@ -91,14 +94,17 @@ public sealed class CommandContext
     private readonly ILocalizationProvider _localization;
     private readonly ITelnetServerDiagnostics _diagnostics;
 
-    public CommandContext(SessionState session, ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics)
+    public CommandContext(SessionState session, WorldSession world, ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics)
     {
         Session = session ?? throw new ArgumentNullException(nameof(session));
+        World = world ?? throw new ArgumentNullException(nameof(world));
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _diagnostics = diagnostics ?? throw new ArgumentNullException(nameof(diagnostics));
     }
 
     public SessionState Session { get; }
+
+    public WorldSession World { get; }
 
     public ITelnetServerDiagnostics Diagnostics => _diagnostics;
 
