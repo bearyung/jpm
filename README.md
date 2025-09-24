@@ -52,7 +52,7 @@ dotnet run --project src/JinPingMei.Game
 # connect from another terminal using one of these methods:
 
 # Option 1: Use the provided script for proper terminal handling (RECOMMENDED)
-./connect-raw.sh
+./scripts/connect-raw.sh
 
 # Option 2: Use nc directly (basic, arrow keys may not work properly)
 nc 127.0.0.1 2325
@@ -68,7 +68,7 @@ The server implements proper telnet negotiation for character-at-a-time mode and
 - **Backspace handling** - Properly deletes wide characters and emoji
 - **Arrow key navigation** - Move cursor left/right within input line
 
-**For best experience, use `./connect-raw.sh`** which puts your terminal in raw mode, allowing:
+**For best experience, use `./scripts/connect-raw.sh`** which puts your terminal in raw mode, allowing:
 - Immediate character transmission (no local line buffering)
 - Server-controlled echo (no double characters)
 - Proper arrow key and special character handling
