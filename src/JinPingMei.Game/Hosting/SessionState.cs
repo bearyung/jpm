@@ -7,4 +7,8 @@ public sealed class SessionState
     public string? PlayerName { get; set; }
 
     public bool HasPlayerName => !string.IsNullOrWhiteSpace(PlayerName);
+
+    public string? CurrentLocaleId { get; set; }
+
+    public string? CurrentSceneId { get; set; }
 }

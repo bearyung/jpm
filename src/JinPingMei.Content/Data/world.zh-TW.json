@@ -1,0 +1,217 @@
+{
+  "defaultLocaleId": "qinghe",
+  "locales": [
+    {
+      "id": "qinghe",
+      "name": "清河城",
+      "summary": "清河河運交會之地，商賈雲集，繁華卻暗藏波濤。",
+      "defaultSceneId": "market",
+      "scenes": [
+        {
+          "id": "market",
+          "name": "清河集市",
+          "description": "石板街道上拱頂旗幟招展，香料與熟食的蒸氣混合成令人沉醉的氣味。",
+          "exits": [
+            {
+              "targetSceneId": "teahouse",
+              "displayName": "會仙樓茶館",
+              "description": "朱漆木門內傳來箏鼓與笑語。",
+              "aliases": ["茶樓", "會仙樓", "teahouse"]
+            },
+            {
+              "targetSceneId": "alley",
+              "displayName": "胭脂巷",
+              "description": "狹窄的巷道被深紅紗燈照得朦朧。",
+              "aliases": ["巷子", "後巷", "胭脂巷", "alley"]
+            },
+            {
+              "targetSceneId": "courtyard",
+              "displayName": "縣衙前庭",
+              "description": "一列石獅守著通往官府的台階。",
+              "aliases": ["縣衙", "前庭", "官府", "courtyard"]
+            }
+          ],
+          "npcs": [
+            {
+              "id": "merchant",
+              "name": "叫賣的商販",
+              "description": "他手裡提著銅鑼，聲嘶力竭地吆喝著最新的絲織。",
+              "aliases": ["商販", "小販", "merchant"]
+            },
+            {
+              "id": "drummer",
+              "name": "說書前的鼓童",
+              "description": "孩童拍著堂鼓為今晚的說書攬客，眼神充滿期盼。",
+              "aliases": ["鼓童", "童子", "drummer"]
+            }
+          ]
+        },
+        {
+          "id": "teahouse",
+          "name": "會仙樓茶館",
+          "description": "樓上雅座香煙裊裊，戲班正排演著即將登場的折子戲。",
+          "exits": [
+            {
+              "targetSceneId": "market",
+              "displayName": "清河集市",
+              "description": "順著雕花木梯下樓即可望見熙攘市街。",
+              "aliases": ["集市", "市場", "market"]
+            },
+            {
+              "targetSceneId": "courtyard",
+              "displayName": "縣衙前庭",
+              "description": "側門連接著官府送茶水的後廳。",
+              "aliases": ["縣衙", "官府", "courtyard"]
+            },
+            {
+              "targetSceneId": "canal",
+              "displayName": "清河運河碼頭",
+              "description": "後門小徑通往碼頭，茶客可在此換乘畫舫。",
+              "aliases": ["碼頭", "運河", "canal"]
+            }
+          ],
+          "npcs": [
+            {
+              "id": "madam",
+              "name": "掌柜的秦媽媽",
+              "description": "秦媽媽笑容可掬，眼神卻銳利，熟悉每位來客的口味與祕密。",
+              "aliases": ["秦媽媽", "掌柜", "madam"]
+            },
+            {
+              "id": "storyteller",
+              "name": "說書人王先生",
+              "description": "他拈著折扇低聲練嗓，談及西門慶與潘金蓮的流言。",
+              "aliases": ["說書人", "王先生", "storyteller"]
+            }
+          ]
+        },
+        {
+          "id": "alley",
+          "name": "胭脂巷",
+          "description": "昏黃燈籠映出朱紅門扉，巷尾傳來琵琶輕響。",
+          "exits": [
+            {
+              "targetSceneId": "market",
+              "displayName": "清河集市",
+              "description": "穿過紗燈即可回到喧鬧的市街。",
+              "aliases": ["集市", "市街", "market"]
+            },
+            {
+              "targetSceneId": "temple",
+              "displayName": "文昌祠",
+              "description": "巷道另一頭連著香火鼎盛的祠堂。",
+              "aliases": ["祠堂", "文昌祠", "temple"]
+            },
+            {
+              "targetSceneId": "courtyard",
+              "displayName": "縣衙前庭",
+              "description": "一條隱蔽的小門直通官府後巷。",
+              "aliases": ["縣衙", "官府", "courtyard"]
+            }
+          ],
+          "npcs": [
+            {
+              "id": "matchmaker",
+              "name": "穿紅襖的媒婆",
+              "description": "她手握竹扇，熟練地打量往來行人，尋找能撮合的對象。",
+              "aliases": ["媒婆", "紅襖", "matchmaker"]
+            }
+          ]
+        },
+        {
+          "id": "temple",
+          "name": "文昌祠",
+          "description": "檀香縈繞，香客低語祈求功名與子嗣，廟祝整理著供桌。",
+          "exits": [
+            {
+              "targetSceneId": "alley",
+              "displayName": "胭脂巷",
+              "description": "繞過碑亭可抵達黯紅的巷口。",
+              "aliases": ["巷子", "胭脂巷", "alley"]
+            },
+            {
+              "targetSceneId": "canal",
+              "displayName": "清河運河碼頭",
+              "description": "後院水門打開，即可步出祠堂至運河邊。",
+              "aliases": ["碼頭", "運河", "canal"]
+            }
+          ],
+          "npcs": [
+            {
+              "id": "abbot",
+              "name": "年長的廟祝",
+              "description": "廟祝捻著念珠，對於流傳的風聞似乎瞭若指掌。",
+              "aliases": ["廟祝", "住持", "abbot"]
+            }
+          ]
+        },
+        {
+          "id": "courtyard",
+          "name": "縣衙前庭",
+          "description": "青石地面油亮，官差巡視來往行人，角落掛著告示的木牌。",
+          "exits": [
+            {
+              "targetSceneId": "market",
+              "displayName": "清河集市",
+              "description": "正門台階通向熙攘市街。",
+              "aliases": ["集市", "市場", "market"]
+            },
+            {
+              "targetSceneId": "teahouse",
+              "displayName": "會仙樓茶館",
+              "description": "官轎常在此處停靠，待茶館掌柜送茶。",
+              "aliases": ["茶樓", "會仙樓", "teahouse"]
+            },
+            {
+              "targetSceneId": "canal",
+              "displayName": "清河運河碼頭",
+              "description": "一條青石小徑沿著護城河而下。",
+              "aliases": ["碼頭", "運河", "canal"]
+            }
+          ],
+          "npcs": [
+            {
+              "id": "bailiff",
+              "name": "巡邏的皂隸",
+              "description": "皂隸腰間配刀，眼神鋒利，似乎對新面孔格外留意。",
+              "aliases": ["皂隸", "官差", "bailiff"]
+            }
+          ]
+        },
+        {
+          "id": "canal",
+          "name": "清河運河碼頭",
+          "description": "木樁邊係著漆黑畫舫，河面倒映著燈火與天邊殘陽。",
+          "exits": [
+            {
+              "targetSceneId": "courtyard",
+              "displayName": "縣衙前庭",
+              "description": "沿石階而上即達官府後門。",
+              "aliases": ["縣衙", "官府", "courtyard"]
+            },
+            {
+              "targetSceneId": "teahouse",
+              "displayName": "會仙樓茶館",
+              "description": "一條蜿蜒小徑連接到茶館後院。",
+              "aliases": ["茶樓", "會仙樓", "teahouse"]
+            },
+            {
+              "targetSceneId": "temple",
+              "displayName": "文昌祠",
+              "description": "沿河岸走便能看見祠堂的朱紅牌樓。",
+              "aliases": ["祠堂", "文昌祠", "temple"]
+            }
+          ],
+          "npcs": [
+            {
+              "id": "boatman",
+              "name": "操槳的船伕",
+              "description": "船伕臂膀結實，熟練地固定繫索，偶爾望向縣衙方向。",
+              "aliases": ["船伕", "艄公", "boatman"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
