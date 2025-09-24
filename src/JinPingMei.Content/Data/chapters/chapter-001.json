@@ -53,16 +53,303 @@
     "ExitState": "武松以打虎豪名風靡清河；潘金蓮對強勢男子心生嚮往，王婆、西門慶覬覦其情慾裂縫，為後續出軌埋下引信。",
     "Objectives": [
       {
-        "Id": "main-survive-tiger",
-        "Title": "景陽岡伏虎",
-        "Description": "協助或扮演武松，在醉意與寒風中以臨場判斷制服猛虎。",
-        "Type": "Main"
+        "Id": "mission-sworn-oath",
+        "Title": "兄弟誓言",
+        "Description": "與武大郎席間立誓，囑託守門自保並記錄口信。",
+        "Category": "Story",
+        "HostDirectives": {
+          "武松": "Mandatory",
+          "武大郎": "Optional",
+          "潘金蓮": "Unavailable",
+          "王婆": "Unavailable",
+          "西門慶": "Unavailable"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.ch1.oath_sworn",
+            "Comparison": "==",
+            "Value": true
+          },
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.ch1.wuda_acknowledged_vow",
+            "Comparison": "==",
+            "Value": true
+          }
+        ]
       },
       {
-        "Id": "side-observe-household",
-        "Title": "探查炊餅坊異狀",
-        "Description": "留意武大郎家中的緊張氣氛，蒐集潘金蓮不滿婚姻的線索。",
-        "Type": "Side"
+        "Id": "mission-guard-threshold",
+        "Title": "封門錠",
+        "Description": "協助武大郎調整炊餅行程、檢查門鎖，將武松的叮囑落實為日常。",
+        "Category": "Story",
+        "HostDirectives": {
+          "武松": "Optional",
+          "武大郎": "Mandatory",
+          "潘金蓮": "Optional",
+          "王婆": "Unavailable",
+          "西門慶": "Unavailable"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.ch1.threshold_secured",
+            "Comparison": "==",
+            "Value": true
+          }
+        ]
+      },
+      {
+        "Id": "mission-curtain-meeting",
+        "Title": "簾下初會",
+        "Description": "在王婆茶坊安排西門慶與潘金蓮的第一次目光交會。",
+        "Category": "Story",
+        "HostDirectives": {
+          "武松": "Unavailable",
+          "武大郎": "Unavailable",
+          "潘金蓮": "Mandatory",
+          "王婆": "Optional",
+          "西門慶": "Mandatory"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.ch1.curtain_meeting",
+            "Comparison": "==",
+            "Value": true
+          },
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.ch1.signal_agreed",
+            "Comparison": "==",
+            "Value": true
+          }
+        ]
+      },
+      {
+        "Id": "mission-teahouse-prep",
+        "Title": "茶坊佈局",
+        "Description": "王婆勘察茶坊動線，記錄暗號與逃脫路線。",
+        "Category": "Story",
+        "HostDirectives": {
+          "武松": "Unavailable",
+          "武大郎": "Unavailable",
+          "潘金蓮": "Optional",
+          "王婆": "Mandatory",
+          "西門慶": "Optional"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.ch1.teahouse_surveyed",
+            "Comparison": "==",
+            "Value": true
+          }
+        ]
+      },
+      {
+        "Id": "mission-merchant-scout",
+        "Title": "豪商巡察",
+        "Description": "西門慶在集市與茶坊間布置眼線，確保後續行動安全。",
+        "Category": "Story",
+        "HostDirectives": {
+          "武松": "Unavailable",
+          "武大郎": "Unavailable",
+          "潘金蓮": "Optional",
+          "王婆": "Optional",
+          "西門慶": "Mandatory"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.ch1.merchant_scouted",
+            "Comparison": "==",
+            "Value": true
+          }
+        ]
+      },
+      {
+        "Id": "mission-report-hub",
+        "Title": "策議堂報到",
+        "Description": "前往卷之一策議堂與卷務司記官同步任務清單，確認本卷 Mandatory 清單與冷錢包容量。",
+        "Category": "Story",
+        "HostDirectives": {
+          "武松": "Mandatory",
+          "武大郎": "Mandatory",
+          "潘金蓮": "Mandatory",
+          "王婆": "Mandatory",
+          "西門慶": "Mandatory"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.meta.hub_checkin",
+            "Comparison": "==",
+            "Value": true
+          }
+        ]
+      },
+      {
+        "Id": "mission-gossip-notes",
+        "Title": "街坊耳語",
+        "Description": "蒐集清河街上對潘家與王婆的留言，為後續勒索或澄清做準備。",
+        "Category": "Optional",
+        "HostDirectives": {
+          "武松": "Optional",
+          "武大郎": "Optional",
+          "潘金蓮": "Optional",
+          "王婆": "Optional",
+          "西門慶": "Optional"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.ch1.gossip_notes_done",
+            "Comparison": "==",
+            "Value": true
+          }
+        ]
+      },
+      {
+        "Id": "mission-escort-tribute",
+        "Title": "差程整備",
+        "Description": "檢查赴東京的禮擔、路費與護衛配置，預演沿途應對方案。",
+        "Category": "Optional",
+        "HostDirectives": {
+          "武松": "Mandatory",
+          "武大郎": "Optional",
+          "潘金蓮": "Unavailable",
+          "王婆": "Unavailable",
+          "西門慶": "Unavailable"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.ch1.tribute_rehearsed",
+            "Comparison": "==",
+            "Value": true
+          },
+          {
+            "Type": "Inventory",
+            "Location": "HotWallet",
+            "RequiredItems": [
+              "tribute_chest",
+              "route_map"
+            ],
+            "MinDistinct": 2
+          }
+        ]
+      },
+      {
+        "Id": "mission-prologue-reflection",
+        "Title": "詞序反思",
+        "Description": "在策議堂或靜室研讀開篇詞序，獲得對情慾與報應主題的洞見。",
+        "Category": "Bonus",
+        "HostDirectives": {
+          "武松": "Optional",
+          "武大郎": "Optional",
+          "潘金蓮": "Optional",
+          "王婆": "Optional",
+          "西門慶": "Optional"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.meta.prologue_reflection",
+            "Comparison": "==",
+            "Value": true
+          }
+        ]
+      },
+      {
+        "Id": "mission-coldwallet-setup",
+        "Title": "冷錢包整理",
+        "Description": "分配至少一件本卷重要物資至冷錢包，建立跨卷攜帶策略。",
+        "Category": "Bonus",
+        "HostDirectives": {
+          "武松": "Mandatory",
+          "武大郎": "Optional",
+          "潘金蓮": "Optional",
+          "王婆": "Optional",
+          "西門慶": "Optional"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.meta.coldwallet_prepared",
+            "Comparison": "==",
+            "Value": true
+          },
+          {
+            "Type": "Inventory",
+            "Location": "ColdWallet",
+            "MinItems": 1
+          }
+        ]
+      },
+      {
+        "Id": "sq_vol1_legend-rumors",
+        "Title": "英雄傳聞調查",
+        "Description": "依照詞曲線索尋找虞姬墓地或宋江義軍的下落，蒐集兩條以上的可靠情報。",
+        "Category": "Optional",
+        "HostDirectives": {
+          "武松": "Optional",
+          "武大郎": "Optional",
+          "潘金蓮": "Optional",
+          "王婆": "Optional",
+          "西門慶": "Optional"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.ch1.legend_rumors_done",
+            "Comparison": "==",
+            "Value": true
+          }
+        ]
+      },
+      {
+        "Id": "sq_vol1_gossip-web",
+        "Title": "八卦網絡編織",
+        "Description": "透過王婆或鄰婦掌握至少三條關於潘金蓮與西門慶的流言，為後續勒索鋪路。",
+        "Category": "Optional",
+        "HostDirectives": {
+          "武松": "Optional",
+          "武大郎": "Optional",
+          "潘金蓮": "Optional",
+          "王婆": "Mandatory",
+          "西門慶": "Optional"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.ch1.gossip_web_done",
+            "Comparison": "==",
+            "Value": true
+          }
+        ]
+      },
+      {
+        "Id": "bonus_vol1_progress-board",
+        "Title": "任務榜精進",
+        "Description": "在策議堂任務榜上展示至少一項額外成就，以獲得司記官的獎勵。",
+        "Category": "Bonus",
+        "HostDirectives": {
+          "武松": "Optional",
+          "武大郎": "Optional",
+          "潘金蓮": "Optional",
+          "王婆": "Optional",
+          "西門慶": "Optional"
+        },
+        "Completion": [
+          {
+            "Type": "StateFlag",
+            "Id": "vol1.meta.progress_board_done",
+            "Comparison": "==",
+            "Value": true
+          }
+        ]
       }
     ],
     "KeyItems": [
@@ -75,6 +362,16 @@
         "Id": "tiger-pelt",
         "Name": "猛虎皮",
         "Usage": "作為官府賞賜象徵，後續可換取聲望或引發貪圖事件"
+      },
+      {
+        "Id": "tribute_chest",
+        "Name": "赴京禮擔",
+        "Usage": "武松差程必備的禮箱，需登記檢查方能出發"
+      },
+      {
+        "Id": "route_map",
+        "Name": "差程路簿",
+        "Usage": "標記沿途驛站與危險路段，供武松演練整備"
       }
     ],
     "Scenes": [
@@ -85,12 +382,29 @@
         "Beats": [
           {
             "Trigger": "與說書人互動或成功吟和",
-            "Description": "獲得對情慾與報應的主題提示，可作為後續選擇的道德參照"
+            "Description": "獲得對情慾與報應的主題提示，可作為後續選擇的道德參照",
+            "EventId": "vol1.meta.prologue-reflection",
+            "OnSuccessFlags": {
+              "vol1.meta.prologue_reflection": true
+            }
           }
         ],
         "Hooks": [
-          "插入支線：尋找詞中提及的虞姬墓地或宋江義軍傳聞",
-          "授予玩家『情慾羈絆』描籠，影響人際說服檢定"
+          {
+            "Type": "UnlockSideQuest",
+            "Payload": {
+              "QuestId": "sq_vol1_legend-rumors"
+            },
+            "Description": "插入支線：尋找詞中提及的虞姬墓地或宋江義軍傳聞"
+          },
+          {
+            "Type": "GrantStatus",
+            "Payload": {
+              "StatusId": "bond.passion",
+              "Amount": 1
+            },
+            "Description": "授予玩家『情慾羈絆』描籠，影響人際說服檢定"
+          }
         ]
       },
       {
@@ -100,13 +414,141 @@
         "Beats": [
           {
             "Trigger": "武松飲至十五碗後",
-            "Description": "測試玩家對武松的影響力，成功則獲得『半醒』狀態，失敗則保持『醉勇』"
+            "Description": "測試玩家對武松的影響力，成功則獲得『半醒』狀態，失敗則保持『醉勇』",
+            "EventId": "vol1.ch1.inn-toast",
+            "OnSuccessFlags": {
+              "vol1.ch1.wuda_acknowledged_vow": true,
+              "vol1.ch1.oath_sworn": true
+            }
           }
         ],
         "Hooks": [
-          "收集官府懸賞消息及遊俠傳說",
-          "建立與酒保、獵戶的後續人脈"
-        ]
+          {
+            "Type": "UnlockLore",
+            "Payload": {
+              "LoreId": "vol1.bounty-rumors"
+            },
+            "Description": "收集官府懸賞消息及遊俠傳說"
+          },
+          {
+            "Type": "ModifyRelationship",
+            "Payload": {
+              "Target": [
+                "bartender",
+                "hunter"
+              ],
+              "Delta": 1
+            },
+            "Description": "建立與酒保、獵戶的後續人脈"
+          }
+        ],
+        "SkillChecks": [
+          {
+            "Host": "武松",
+            "Trait": "醉勇",
+            "Difficulty": "Standard",
+            "SuccessEvent": "vol1.ch1.inn-toast",
+            "FailureEvent": "vol1.ch1.inn-toast-fail",
+            "SuccessFlags": {
+              "vol1.ch1.wuda_acknowledged_vow": true
+            }
+          },
+          {
+            "Host": "武大郎",
+            "Trait": "醉量",
+            "Difficulty": "Hard",
+            "SuccessEvent": "vol1.ch1.inn-toast",
+            "FailureEvent": "vol1.ch1.inn-toast-fail"
+          },
+          {
+            "Host": "西門慶",
+            "Trait": "社交",
+            "Difficulty": "Hard",
+            "SuccessEvent": "vol1.ch1.inn-toast",
+            "FailureEvent": "vol1.ch1.inn-toast-fail"
+          }
+        ],
+        "HostsEligible": [
+          "武松",
+          "武大郎",
+          "潘金蓮"
+        ],
+        "HostParticipation": {
+          "武松": "primary",
+          "武大郎": "support",
+          "潘金蓮": "observer",
+          "王婆": "absent",
+          "西門慶": "absent"
+        }
+      },
+      {
+        "Id": "scene-curtain",
+        "Title": "簾下試探",
+        "Summary": "王婆安排裁衣之名，觀察潘金蓮與西門慶的眼神交流，確立暗號。",
+        "Beats": [
+          {
+            "Trigger": "王婆佈置裁縫案",
+            "Description": "王婆巡視茶坊動線，記錄暗號與逃逸路徑。",
+            "EventId": "vol1.ch1.teahouse-survey",
+            "OnSuccessFlags": {
+              "vol1.ch1.teahouse_surveyed": true
+            }
+          },
+          {
+            "Trigger": "簾下對視",
+            "Description": "潘金蓮與西門慶互換暗號，若成功則敲定偷情時程。",
+            "EventId": "vol1.ch1.curtain-meeting",
+            "OnSuccessFlags": {
+              "vol1.ch1.curtain_meeting": true,
+              "vol1.ch1.signal_agreed": true
+            }
+          }
+        ],
+        "Hooks": [
+          {
+            "Type": "SetFlag",
+            "Payload": {
+              "Id": "vol1.ch1.gossip_web_done",
+              "Value": true
+            },
+            "Description": "王婆記錄下談話內容，作為日後勒索的籌碼。"
+          }
+        ],
+        "SkillChecks": [
+          {
+            "Host": "王婆",
+            "Trait": "策謀",
+            "Difficulty": "Standard",
+            "SuccessEvent": "vol1.ch1.teahouse-survey",
+            "FailureEvent": "vol1.ch1.teahouse-survey-fail"
+          },
+          {
+            "Host": "潘金蓮",
+            "Trait": "魅惑",
+            "Difficulty": "Standard",
+            "SuccessEvent": "vol1.ch1.curtain-meeting",
+            "FailureEvent": "vol1.ch1.curtain-meeting-fail"
+          },
+          {
+            "Host": "西門慶",
+            "Trait": "社交",
+            "Difficulty": "Standard",
+            "SuccessEvent": "vol1.ch1.curtain-meeting",
+            "FailureEvent": "vol1.ch1.curtain-meeting-fail"
+          }
+        ],
+        "HostsEligible": [
+          "潘金蓮",
+          "王婆",
+          "西門慶"
+        ],
+        "HostParticipation": {
+          "潘金蓮": "primary",
+          "王婆": "facilitator",
+          "西門慶": "primary",
+          "武松": "absent",
+          "武大郎": "absent"
+        }
       },
       {
         "Id": "scene-ridge",
@@ -115,20 +557,52 @@
         "Beats": [
           {
             "Trigger": "踏入虎跡累累的松林",
-            "Description": "引發技能檢定：感知或追蹤以提前察覺猛虎動向"
+            "Description": "引發技能檢定：感知或追蹤以提前察覺猛虎動向",
+            "EventId": "vol1.ch1.ridge-scout"
           },
           {
             "Trigger": "猛虎撲擊",
-            "Description": "以體術或武技對抗，若失敗則觸發負傷或需要夥伴救援"
+            "Description": "以體術或武技對抗，若失敗則觸發負傷或需要夥伴救援",
+            "EventId": "vol1.ch1.ridge-ambush"
           },
           {
             "Trigger": "武松折斷梢棒",
-            "Description": "劇情必備轉折，玩家需改變策略，使用地形或徒手搏擊"
+            "Description": "劇情必備轉折，玩家需改變策略，使用地形或徒手搏擊",
+            "EventId": "vol1.ch1.ridge-staffbreak"
           }
         ],
         "Hooks": [
-          "成功後獲得官府賞銀與名望，開啟官場線",
-          "虎血可作煉丹或符法材料，連結修行系統"
+          {
+            "Type": "GrantReputation",
+            "Payload": {
+              "FactionId": "qinghe.officials",
+              "Amount": 5
+            },
+            "Description": "成功後獲得官府賞銀與名望，開啟官場線"
+          },
+          {
+            "Type": "UnlockCraftingRecipe",
+            "Payload": {
+              "RecipeId": "alchemy.tigerblood"
+            },
+            "Description": "虎血可作煉丹或符法材料，連結修行系統"
+          }
+        ],
+        "SkillChecks": [
+          {
+            "Host": "武松",
+            "Trait": "體術",
+            "Difficulty": "Standard",
+            "SuccessEvent": "vol1.ch1.ridge-ambush",
+            "FailureEvent": "vol1.ch1.ridge-ambush-fail"
+          },
+          {
+            "Host": "王婆",
+            "Trait": "求生",
+            "Difficulty": "Impossible",
+            "FailureEvent": "vol1.ch1.ridge-ambush-fail",
+            "Notes": "王婆無法親自應對猛虎。"
+          }
         ]
       },
       {
@@ -138,16 +612,304 @@
         "Beats": [
           {
             "Trigger": "席間談及打虎功勳",
-            "Description": "潘金蓮目光流轉，玩家可察覺其對強勢男子的興趣"
+            "Description": "潘金蓮目光流轉，玩家可察覺其對強勢男子的興趣",
+            "EventId": "vol1.ch1.household-brag"
           },
           {
             "Trigger": "夜深訪房或偷聽",
-            "Description": "收集話柄，可於後續勸戒或勒索"
+            "Description": "收集話柄，可於後續勸戒或勒索",
+            "EventId": "vol1.ch1.household-eavesdrop"
           }
         ],
         "Hooks": [
-          "王婆或鄰婦提供八卦，引導至外遇支線",
-          "玩家可選擇站在武松、武大郎或中立調停的立場"
+          {
+            "Type": "UnlockSideQuest",
+            "Payload": {
+              "QuestId": "sq_vol1_gossip-web"
+            },
+            "Description": "王婆或鄰婦提供八卦，引導至外遇支線"
+          },
+          {
+            "Type": "BranchDecision",
+            "Payload": {
+              "Options": [
+                {
+                  "OptionId": "support_wusong",
+                  "Description": "支持武松勸戒"
+                },
+                {
+                  "OptionId": "support_wuda",
+                  "Description": "協助武大郎維持婚姻"
+                },
+                {
+                  "OptionId": "remain_neutral",
+                  "Description": "保持中立，觀察情勢"
+                }
+              ]
+            },
+            "Description": "玩家可選擇站在武松、武大郎或中立調停的立場"
+          }
+        ]
+      },
+      {
+        "Id": "scene-hub",
+        "Title": "卷之一策議堂",
+        "Summary": "時間旅人抵達策議堂，向卷務司記官登記並整理冷錢包。",
+        "Beats": [
+          {
+            "Trigger": "向司記官報到",
+            "Description": "確認本卷 Mandatory 任務與宿主，取得任務木籤",
+            "EventId": "vol1.meta.hub-checkin",
+            "OnSuccessFlags": {
+              "vol1.meta.hub_checkin": true
+            }
+          },
+          {
+            "Trigger": "盤點冷錢包",
+            "Description": "存入至少一件關鍵物品，規劃跨卷攜帶策略",
+            "EventId": "vol1.meta.coldwallet-prep",
+            "OnSuccessFlags": {
+              "vol1.meta.coldwallet_prepared": true
+            }
+          }
+        ],
+        "Hooks": [
+          {
+            "Type": "DisplayHint",
+            "Payload": {
+              "HintId": "vol1.exit.requirements"
+            },
+            "Description": "司記官可提示卷尾觸發條件，提供額外提示"
+          },
+          {
+            "Type": "UnlockMission",
+            "Payload": {
+              "MissionId": "bonus_vol1_progress-board"
+            },
+            "Description": "任務榜可根據玩家完成度開啟 Bonus 支線"
+          },
+          {
+            "Type": "SetFlag",
+            "Payload": {
+              "Id": "vol1.meta.progress_board_done",
+              "Value": true
+            },
+            "Description": "司記官在任務榜上加註旅人完成度，開啟額外獎勵。"
+          }
+        ]
+      },
+      {
+        "Id": "scene-market-scout",
+        "Title": "市井巡查",
+        "Summary": "西門慶於集市間安插眼線，確保後續行動安全。",
+        "Beats": [
+          {
+            "Trigger": "巡視市井",
+            "Description": "西門慶檢視酒家、茶坊的動線與護衛。",
+            "EventId": "vol1.ch1.merchant-scouted",
+            "OnSuccessFlags": {
+              "vol1.ch1.merchant_scouted": true
+            }
+          }
+        ],
+        "Hooks": [
+          {
+            "Type": "GrantReputation",
+            "Payload": {
+              "FactionId": "qinghe.merchant-guild",
+              "Amount": 2
+            },
+            "Description": "安插眼線後獲得商會人脈支持。"
+          }
+        ],
+        "SkillChecks": [
+          {
+            "Host": "西門慶",
+            "Trait": "財勢",
+            "Difficulty": "Easy",
+            "SuccessEvent": "vol1.ch1.merchant-scouted",
+            "FailureEvent": "vol1.ch1.merchant-scouted-fail"
+          }
+        ],
+        "HostsEligible": [
+          "西門慶",
+          "武松"
+        ]
+      },
+      {
+        "Id": "scene-threshold",
+        "Title": "封門叮囑",
+        "Summary": "武松協助武大郎調整炊餅出攤時間並檢查門鎖。",
+        "Beats": [
+          {
+            "Trigger": "調整出攤時辰",
+            "Description": "規畫半數炊餅留守，減少外出時間。",
+            "EventId": "vol1.ch1.threshold-secured",
+            "OnSuccessFlags": {
+              "vol1.ch1.threshold_secured": true
+            }
+          }
+        ],
+        "Hooks": [
+          {
+            "Type": "SetFlag",
+            "Payload": {
+              "Id": "vol1.ch1.gossip_notes_done",
+              "Value": true
+            },
+            "Description": "封門安排完成，武大郎於帳冊記錄口信。"
+          }
+        ],
+        "SkillChecks": [
+          {
+            "Host": "武松",
+            "Trait": "領導",
+            "Difficulty": "Standard",
+            "SuccessEvent": "vol1.ch1.threshold-secured",
+            "FailureEvent": "vol1.ch1.threshold-fail"
+          },
+          {
+            "Host": "武大郎",
+            "Trait": "勤勞",
+            "Difficulty": "Easy",
+            "SuccessEvent": "vol1.ch1.threshold-secured",
+            "FailureEvent": "vol1.ch1.threshold-fail"
+          }
+        ],
+        "HostsEligible": [
+          "武松",
+          "武大郎"
+        ],
+        "HostParticipation": {
+          "武松": "primary",
+          "武大郎": "support",
+          "潘金蓮": "observer",
+          "王婆": "absent",
+          "西門慶": "absent"
+        }
+      },
+      {
+        "Id": "scene-tribute",
+        "Title": "差程整備",
+        "Summary": "武松與土兵演練赴京路線，盤點禮擔與護衛。",
+        "Beats": [
+          {
+            "Trigger": "演練路線",
+            "Description": "排定驛站與危險地段，確認護衛配置。",
+            "EventId": "vol1.ch1.tribute-rehearsed",
+            "OnSuccessFlags": {
+              "vol1.ch1.tribute_rehearsed": true
+            }
+          }
+        ],
+        "Hooks": [
+          {
+            "Type": "GrantStatus",
+            "Payload": {
+              "StatusId": "route.prepared",
+              "Amount": 1
+            },
+            "Description": "獲得赴京旅程的預備狀態，加成後續差事判定。"
+          }
+        ],
+        "SkillChecks": [
+          {
+            "Host": "武松",
+            "Trait": "規劃",
+            "Difficulty": "Standard",
+            "SuccessEvent": "vol1.ch1.tribute-rehearsed",
+            "FailureEvent": "vol1.ch1.tribute-rehearsed-fail"
+          }
+        ]
+      },
+      {
+        "Id": "scene-gossip",
+        "Title": "巷口採訪",
+        "Summary": "時間旅人走訪鄰里，蒐集關於潘家與王婆的流言。",
+        "Beats": [
+          {
+            "Trigger": "訪談鄰里",
+            "Description": "說服鄰里提供兩條可靠的流言。",
+            "EventId": "vol1.ch1.gossip_notes",
+            "OnSuccessFlags": {
+              "vol1.ch1.gossip_notes_done": true
+            }
+          }
+        ],
+        "Hooks": [
+          {
+            "Type": "SetFlag",
+            "Payload": {
+              "Id": "vol1.ch1.gossip_web_done",
+              "Value": true
+            },
+            "Description": "累積流言後可繪製王婆牽線的關係圖。"
+          }
+        ],
+        "SkillChecks": [
+          {
+            "Host": "王婆",
+            "Trait": "八卦",
+            "Difficulty": "Easy",
+            "SuccessEvent": "vol1.ch1.gossip_notes",
+            "FailureEvent": "vol1.ch1.gossip_notes_fail"
+          },
+          {
+            "Host": "武松",
+            "Trait": "直覺",
+            "Difficulty": "Standard",
+            "SuccessEvent": "vol1.ch1.gossip_notes",
+            "FailureEvent": "vol1.ch1.gossip_notes_fail"
+          }
+        ],
+        "HostsEligible": [
+          "王婆",
+          "武松",
+          "武大郎"
+        ]
+      },
+      {
+        "Id": "scene-legend",
+        "Title": "英雄傳聞踏查",
+        "Summary": "依照詞曲線索尋訪虞姬墓地或宋江義軍動向。",
+        "Beats": [
+          {
+            "Trigger": "對照詞曲線索",
+            "Description": "比對詞曲與街坊傳說，鎖定兩處可能的情報來源。",
+            "EventId": "vol1.ch1.legend-rumors",
+            "OnSuccessFlags": {
+              "vol1.ch1.legend_rumors_done": true
+            }
+          }
+        ],
+        "Hooks": [
+          {
+            "Type": "UnlockLore",
+            "Payload": {
+              "LoreId": "vol1.legend.trail"
+            },
+            "Description": "將景陽岡相關的異聞加入情報庫。"
+          }
+        ],
+        "SkillChecks": [
+          {
+            "Host": "武松",
+            "Trait": "歷練",
+            "Difficulty": "Standard",
+            "SuccessEvent": "vol1.ch1.legend-rumors",
+            "FailureEvent": "vol1.ch1.legend-rumors-fail"
+          },
+          {
+            "Host": "西門慶",
+            "Trait": "人脈",
+            "Difficulty": "Easy",
+            "SuccessEvent": "vol1.ch1.legend-rumors",
+            "FailureEvent": "vol1.ch1.legend-rumors-fail"
+          }
+        ],
+        "HostsEligible": [
+          "西門慶",
+          "武松"
         ]
       }
     ],
@@ -160,7 +922,8 @@
       "武松",
       "武大郎",
       "潘金蓮",
-      "王婆"
+      "王婆",
+      "西門慶"
     ],
     "RecommendedMode": "hybrid",
     "HostSettings": {
@@ -212,5 +975,6 @@
         "Notes": "社交操盤手；控制情報與交易節點。"
       }
     }
-  }
+  },
+  "VolumeId": "volume-01"
 }

@@ -4,7 +4,7 @@ Players embody a present-day traveler (“the Chronist”) who tumbles back into
 
 ## Campaign Loop
 
-1. **Session Zero**: pick the lifespan of each 卷 (chapter ranges) and decide whether host selection is manual, random, or a shortlist draw.
+1. **Session Zero**: pick the lifespan of each 卷 (chapter ranges) and decide whether host selection is manual, random, or a shortlist draw。`Data/volumes.json` 已預先將卷之一（Episode 1, 第 1–10 回）與卷之二（Episode 2, 第 11–20 回）列出，可直接引用或調整；任務欄位細節見 `docs/gameplay/mission-design.md`。
 2. **During a 卷**: play the host character as normal. Choices affect the timeline, earn skills, and acquire items.
 3. **Recall Phase**: conclude the arc, record permanent gains in the cold wallet, resolve fallout for the timeline, and select the next host.
 4. **Next 卷**: load the appropriate chapter bundle, instantiate the new host, and continue.

@@ -18,6 +18,9 @@ Running the extractor produces:
 - `chapter-###.json` files containing `id`, `number`, `titles`, and the chapter body.
 - `index.json` summarising the extracted chapters.
 - `front-matter.txt` where the source includes preface or introductory material.
+- `volumes.json` mapping各卷（episode）對應的章節清單與簡要摘要。若調整分卷編排，請同步更新每章節的 `VolumeId` 與此檔案。
+
+> 任務欄位、宿主義務與卷 hub 設定，請參考 `docs/gameplay/mission-design.md`。
 
 ## LLM analysis template
 

@@ -15,7 +15,9 @@ Every chapter lives under `Data/chapters/chapter-###.json`. The extractor writes
 }
 ```
 
-Do not edit `Id`, `Number`, `Titles`, or `Text`. All gameplay material goes into a new sibling property named `Gameplay`.
+Do not edit `Id`, `Number`, `Titles`, or `Text`. All gameplay material goes into a new sibling property named `Gameplay`。
+
+另外，每個章節包含 `VolumeId` 用以指向分卷（episode）。分卷資訊集中在 `Data/volumes.json`，可用於一次載入一整卷（例如卷之一涵蓋第 1–10 回）。調整章節所屬卷，只需同步更新該欄位與 `volumes.json` 的 `ChapterIds` 清單。分卷 hub 與任務規則詳見 `docs/gameplay/mission-design.md`。
 
 ## 2. Add the gameplay scaffold
 
@@ -29,7 +31,7 @@ Append a `Gameplay` object with the fields below. Copy the schema from `chapter-
   "Locations": [{"Id": "…", "Name": "…", "Notes": "…"}],
   "EntryState": "…",
   "ExitState": "…",
-  "Objectives": [{"Id": "…", "Title": "…", "Description": "…", "Type": "Main|Side"}],
+  "Objectives": [{"Id": "…", "Title": "…", "Description": "…", "Category": "Story|Optional|Bonus", "HostDirectives": {"宿主": "Mandatory|Optional|Unavailable"}, "Completion": [{"Type": "Event", "Id": "…"}]}],
   "KeyItems": [{"Id": "…", "Name": "…", "Usage": "…"}],
   "EligibleHosts": ["…"],
   "HostSettings": {
@@ -57,7 +59,12 @@ Write all narrative text in Traditional Chinese. Keep descriptions concise and a
 - **Entry/Exit State** – describe world/relationship shifts caused by the chapter.
 - **Objectives** – mix main story beats and optional hooks; `Type` is `Main` or `Side`.
 - **KeyItems** – anything the player might acquire or spend.
-- **EligibleHosts / HostSettings / RecommendedMode** – define which host bodies can anchor the 卷, their inventory limits, trait tags, and whether GM should pick manually, randomly, or via shortlist.
+- **EligibleHosts / HostSettings / RecommendedMode** – define which host bodies can anchor the 卷, their inventory limits, trait tags, and whether GM should pick manually, randomly, or via shortlist。
+- **Objectives** – `Category` 表示任務類型（Story = 可能成為 Mandatory；Optional、Bonus 為選修/成就）。`HostDirectives` 針對每位宿主標記義務程度：
+  - `Mandatory`：該宿主必須完成才能結算本卷。
+  - `Optional`：建議完成，常提供資源或彩蛋。
+  - `Unavailable`：該宿主不能或不需要處理此任務。
+- **Completion** – 列出任務完成所需的事件或狀態條件（如 `Event`、`StateFlag`、`Inventory`）。詳細格式見 `docs/gameplay/mission-design.md`。
 - **Scenes** – chunk the chapter into playable moments. For each scene include an id, title, summary, at least one beat (trigger + description), and optional hooks for branching content.
 - **GMNotes** – free-form tips, safety reminders, pacing suggestions, etc.
 

@@ -1,0 +1,44 @@
+[
+  {
+    "Id": "volume-01",
+    "Title": "卷之一",
+    "EpisodeLabel": "Episode 1",
+    "HubSceneId": "episode-01-hall",
+    "HostRoster": ["武松", "武大郎", "潘金蓮", "王婆", "西門慶", "鄆哥", "孟玉樓", "吳月娘"],
+    "CompletionRule": "Active host must complete all missions標記為 Mandatory 的目標方可解鎖卷一終章；Optional 與 Bonus 影響評價與後續資源。",
+    "ChapterIds": [
+      "chapter-001",
+      "chapter-002",
+      "chapter-003",
+      "chapter-004",
+      "chapter-005",
+      "chapter-006",
+      "chapter-007",
+      "chapter-008",
+      "chapter-009",
+      "chapter-010"
+    ],
+    "Synopsis": "自景陽岡打虎始，鋪陳武松返鄉、潘金蓮與西門慶暗度陳倉，以及王婆推波助瀾的陰謀，逐步引向武大郎遇害的危機。"
+  },
+  {
+    "Id": "volume-02",
+    "Title": "卷之二",
+    "EpisodeLabel": "Episode 2",
+    "HubSceneId": "episode-02-hall",
+    "HostRoster": ["武松", "西門慶", "潘金蓮", "吳月娘", "陳文昭", "孫雪娥"],
+    "CompletionRule": "延續 Mandatory 完成規則；詳細任務結構待卷二整理後補。",
+    "ChapterIds": [
+      "chapter-011",
+      "chapter-012",
+      "chapter-013",
+      "chapter-014",
+      "chapter-015",
+      "chapter-016",
+      "chapter-017",
+      "chapter-018",
+      "chapter-019",
+      "chapter-020"
+    ],
+    "Synopsis": "潘金蓮結怨加深，西門慶與王婆設局害死武大郎，武松復仇走上江湖；同時金蓮被納入西門府，揭開豪門內鬥與欲望新篇。"
+  }
+]
