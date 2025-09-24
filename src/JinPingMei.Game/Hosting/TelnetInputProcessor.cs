@@ -46,16 +46,29 @@ internal sealed class TelnetInputProcessor
 
     public async Task InitializeNegotiationAsync(CancellationToken cancellationToken)
     {
-        // Tell client we WILL do server-side echo
-        await SendCommandAsync(Will, EchoOption, cancellationToken).ConfigureAwait(false);
-        // Tell client we WILL suppress go-ahead
-        await SendCommandAsync(Will, SuppressGoAhead, cancellationToken).ConfigureAwait(false);
-        // Tell client we WON'T do linemode (force character mode)
-        await SendCommandAsync(Wont, LineMode, cancellationToken).ConfigureAwait(false);
-        // Request client to suppress go-ahead
-        await SendCommandAsync(Do, SuppressGoAhead, cancellationToken).ConfigureAwait(false);
-        // Request client not to echo locally
-        await SendCommandAsync(Dont, EchoOption, cancellationToken).ConfigureAwait(false);
+        // Flush any pending output first
+        await _writer.FlushAsync().ConfigureAwait(false);
+
+        // Send all negotiation commands as a single batch to minimize visual artifacts
+        var negotiationBytes = new byte[]
+        {
+            // IAC WILL ECHO
+            Iac, Will, EchoOption,
+            // IAC WILL SUPPRESS-GO-AHEAD
+            Iac, Will, SuppressGoAhead,
+            // IAC WONT LINEMODE
+            Iac, Wont, LineMode,
+            // IAC DO SUPPRESS-GO-AHEAD
+            Iac, Do, SuppressGoAhead,
+            // IAC DONT ECHO
+            Iac, Dont, EchoOption
+        };
+
+        await _stream.WriteAsync(negotiationBytes, cancellationToken).ConfigureAwait(false);
+        await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+
+        // Small delay to let client process negotiation
+        await Task.Delay(50, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<string?> ReadLineAsync(CancellationToken cancellationToken)

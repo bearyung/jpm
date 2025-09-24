@@ -51,14 +51,20 @@ dotnet run --project src/JinPingMei.Game
 
 # connect from another terminal using one of these methods:
 
-# Option 1: Use the provided script for proper terminal handling (RECOMMENDED)
+# Option 1: Use a proper telnet client (RECOMMENDED for full features)
+# - PuTTY: https://www.putty.org/
+# - iTerm2 + brew install telnet
+# - Mudlet: https://www.mudlet.org/
+telnet 127.0.0.1 2325
+
+# Option 2: Use the provided Python script (filters telnet negotiation bytes)
+./scripts/connect-clean.py
+
+# Option 3: Use nc with raw terminal mode script
 ./scripts/connect-raw.sh
 
-# Option 2: Use nc directly (basic, arrow keys may not work properly)
+# Option 4: Use nc directly (simple but shows telnet protocol bytes)
 nc 127.0.0.1 2325
-
-# Option 3: Use telnet (NOT RECOMMENDED - UTF-8 input issues on macOS)
-telnet 127.0.0.1 2325
 ```
 
 ### Important Connection Notes for Contributors
@@ -68,14 +74,21 @@ The server implements proper telnet negotiation for character-at-a-time mode and
 - **Backspace handling** - Properly deletes wide characters and emoji
 - **Arrow key navigation** - Move cursor left/right within input line
 
-**For best experience, use `./scripts/connect-raw.sh`** which puts your terminal in raw mode, allowing:
-- Immediate character transmission (no local line buffering)
-- Server-controlled echo (no double characters)
-- Proper arrow key and special character handling
+**For best experience, use a proper telnet client** like PuTTY, iTerm2+telnet, or Mudlet. These clients:
+- Handle telnet protocol negotiation transparently
+- Support character-at-a-time mode for immediate input
+- Enable arrow keys and advanced editing features
+- Properly display CJK characters without garbled bytes
+
+**Alternative connections:**
+- `./scripts/connect-clean.py` - Filters telnet bytes for clean display with basic clients
+- `./scripts/connect-raw.sh` - Uses nc in raw terminal mode
+- Plain `nc` - Simple but will show telnet negotiation as `������"����` characters
 
 **Known Issues:**
-- macOS telnet client has broken UTF-8 input support - use `nc` or the connection script instead
-- Without raw mode, arrow keys may display as `^[[D` instead of moving the cursor
+- macOS default telnet has broken UTF-8 input - install GNU telnet with `brew install telnet`
+- Simple TCP clients (nc, netcat) show raw telnet protocol bytes
+- Without proper client, arrow keys may display as `^[[D` instead of moving cursor
 
 While infrastructure code is being authored, you can use this README as a reference for design goals, contribute narrative ideas, or help shape the engine architecture.
 

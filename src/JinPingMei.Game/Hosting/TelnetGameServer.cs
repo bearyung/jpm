@@ -154,11 +154,14 @@ public sealed class TelnetGameServer
 
             var inputProcessor = new TelnetInputProcessor(stream, writer);
 
-            // Initialize telnet negotiation for character mode and server echo
+            // Initialize telnet negotiation for character-at-a-time mode and server echo
+            // This enables arrow keys, proper backspace handling, and better interactivity
+            // Note: Use a proper telnet client (PuTTY, iTerm2+telnet, Mudlet) to avoid seeing raw protocol bytes
             await inputProcessor.InitializeNegotiationAsync(cancellationToken);
 
             var session = _sessionFactory.Create();
 
+            // Send welcome message after negotiation
             await writer.WriteLineAsync("歡迎來到《金瓶梅》互動敘事實驗。");
             await writer.WriteLineAsync(" 輸入 '/help' 查看指令清單，輸入 '/quit' 離線。");
             await writer.WriteLineAsync(string.Empty);
