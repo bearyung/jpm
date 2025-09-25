@@ -15,18 +15,24 @@ public sealed class GameSession
     private readonly CommandRouter _commandRouter;
     private readonly CommandContext _commandContext;
     private readonly WorldSession _world;
+    private readonly JinPingMei.Engine.Story.StorySession _story;
 
     public GameSession(GameRuntime runtime, ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics, IEnumerable<ICommandHandler>? additionalHandlers = null)
     {
         _runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _ = diagnostics ?? throw new ArgumentNullException(nameof(diagnostics));
+
         _state = new SessionState { Locale = localization.DefaultLocale };
         _world = runtime.CreateWorldSession();
         _state.CurrentLocaleId = _world.CurrentLocale.Id;
         _state.CurrentSceneId = _world.CurrentScene.Id;
-        _commandRouter = CommandRouter.CreateDefault(localization, diagnostics, additionalHandlers);
-        _commandContext = new CommandContext(_state, _world, localization, diagnostics);
+
+        _story = runtime.CreateStorySession("volume-01");
+
+        var handlers = BuildStoryCommandHandlers(diagnostics, additionalHandlers);
+        _commandRouter = CommandRouter.CreateDefault(localization, diagnostics, handlers);
+        _commandContext = new CommandContext(_state, _world, _story, localization, diagnostics);
     }
 
     public SessionState State => _state;
@@ -45,7 +51,7 @@ public sealed class GameSession
     {
         if (string.IsNullOrWhiteSpace(input))
         {
-            return CommandResult.FromMessage(_commandContext.Localize("story.empty"));
+            return HandleStoryInteraction();
         }
 
         if (IsCommand(input))
@@ -54,23 +60,39 @@ public sealed class GameSession
             return _commandRouter.Dispatch(commandBody, _commandContext);
         }
 
-        return HandleStoryInteraction(input);
+        return HandleStoryInteraction();
     }
 
-    private CommandResult HandleStoryInteraction(string input)
+    private CommandResult HandleStoryInteraction()
     {
-        var trimmed = input.Trim();
-        if (trimmed.Length == 0)
+        if (!_state.HasStoryHost)
         {
-            return CommandResult.FromMessage(_commandContext.Localize("story.empty"));
+            return CommandResult.FromMessage("請先使用 /host <角色名稱> 選擇宿主。\n");
         }
 
-        var displayName = _state.HasPlayerName
-            ? _state.PlayerName!
-            : _commandContext.Localize("session.display_name.default");
+        var result = _story.Advance();
+        if (result.Messages.Count == 0)
+        {
+            return CommandResult.Empty;
+        }
 
-        var response = _commandContext.Format("story.placeholder", displayName, trimmed);
-        return CommandResult.FromMessage(response);
+        return new CommandResult(result.Messages, result.StoryCompleted);
+    }
+
+    private static IEnumerable<ICommandHandler> BuildStoryCommandHandlers(ITelnetServerDiagnostics diagnostics, IEnumerable<ICommandHandler>? additional)
+    {
+        var handlers = new List<ICommandHandler>
+        {
+            new HostCommandHandler(),
+            new StoryStatusCommandHandler()
+        };
+
+        if (additional is not null)
+        {
+            handlers.AddRange(additional);
+        }
+
+        return handlers;
     }
 
     private static bool IsCommand(string input)

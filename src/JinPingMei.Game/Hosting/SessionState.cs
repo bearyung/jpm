@@ -11,4 +11,8 @@ public sealed class SessionState
     public string? CurrentLocaleId { get; set; }
 
     public string? CurrentSceneId { get; set; }
+
+    public string? StoryHostId { get; set; }
+
+    public bool HasStoryHost => !string.IsNullOrWhiteSpace(StoryHostId);
 }

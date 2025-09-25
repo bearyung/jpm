@@ -695,6 +695,16 @@
               "Value": true
             },
             "Description": "司記官在任務榜上加註旅人完成度，開啟額外獎勵。"
+          },
+          {
+            "Type": "AddInventory",
+            "Payload": {
+              "Location": "ColdWallet",
+              "Items": [
+                "cold.cache.mission"
+              ]
+            },
+            "Description": "將重要物資存入冷錢包，預留跨卷資源。"
           }
         ]
       },
@@ -810,6 +820,17 @@
               "Amount": 1
             },
             "Description": "獲得赴京旅程的預備狀態，加成後續差事判定。"
+          },
+          {
+            "Type": "AddInventory",
+            "Payload": {
+              "Location": "HotWallet",
+              "Items": [
+                "tribute_chest",
+                "route_map"
+              ]
+            },
+            "Description": "盤點禮擔並將路簿記錄於熱錢包。"
           }
         ],
         "SkillChecks": [

@@ -94,10 +94,11 @@ public sealed class CommandContext
     private readonly ILocalizationProvider _localization;
     private readonly ITelnetServerDiagnostics _diagnostics;
 
-    public CommandContext(SessionState session, WorldSession world, ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics)
+    public CommandContext(SessionState session, WorldSession world, JinPingMei.Engine.Story.StorySession? story, ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics)
     {
         Session = session ?? throw new ArgumentNullException(nameof(session));
         World = world ?? throw new ArgumentNullException(nameof(world));
+        Story = story;
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _diagnostics = diagnostics ?? throw new ArgumentNullException(nameof(diagnostics));
     }
@@ -105,6 +106,8 @@ public sealed class CommandContext
     public SessionState Session { get; }
 
     public WorldSession World { get; }
+
+    public JinPingMei.Engine.Story.StorySession? Story { get; }
 
     public ITelnetServerDiagnostics Diagnostics => _diagnostics;
 

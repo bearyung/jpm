@@ -132,8 +132,29 @@ public class TelnetGameServerTests
         Assert.Contains("/help", helpLine1 ?? string.Empty);
         Assert.False(string.IsNullOrWhiteSpace(helpLine2));
 
-        var lifetimeLine = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(2));
-        Assert.Contains(options.LifetimeExceededMessage, lifetimeLine ?? string.Empty);
+        string? lifetimeLine = null;
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var line = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(2));
+            if (line is null)
+            {
+                break;
+            }
+
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
+
+            lifetimeLine = line;
+            if (lifetimeLine.Contains(options.LifetimeExceededMessage, StringComparison.Ordinal))
+            {
+                break;
+            }
+        }
+
+        Assert.False(string.IsNullOrEmpty(lifetimeLine));
+        Assert.Contains(options.LifetimeExceededMessage, lifetimeLine!, StringComparison.Ordinal);
         Assert.Equal(1, _metrics.LifetimeExpirations);
 
         cts.Cancel();
