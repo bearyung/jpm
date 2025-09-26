@@ -13,7 +13,7 @@ The first release focuses on Traditional Chinese narration and interface, with a
 - Explore responsible ways of adapting mature classical literature into interactive media.
 
 ## Feature Highlights
-- **Interactive story engine**: Telnet-style or terminal play session with stateful scenes and commands.
+- **Interactive story engine**: Pure console application with stateful scenes and commands.
 - **LLM-powered narration**: GPT-based models expand on authored prompts, generate character dialogue, and react to player intent.
 - **Choice and agency**: Mix of free-form text input and structured options, with consequences tracked over time.
 - **Contextual annotations**: Optional footnotes, glossaries, and historical references that ground each scene.
@@ -23,10 +23,10 @@ The first release focuses on Traditional Chinese narration and interface, with a
 This repository currently serves as the design notebook and planning hub for the upcoming .NET implementation. Engine scaffolding, CI, and content packs are still to be added. Early experimentation will focus on prototyping the narrative loop and evaluating AI prompting strategies.
 
 ## Technology Stack (Planned)
-- **Runtime**: .NET / C# for the MUD engine and orchestration services.
+- **Runtime**: .NET / C# console application for the game engine and orchestration.
 - **AI integration**: OpenAI GPT-based APIs (model selection TBD as the project matures).
 - **Persistence**: SQLite for local playtesting, with a path to PostgreSQL in shared deployments.
-- **Hosting targets**: Local desktop sessions first, followed by containerized deployment options.
+- **Deployment**: Console application that can run locally or be deployed via SSH (using OpenSSH's ForceCommand for remote play).
 
 ## High-Level Architecture
 1. **Narrative engine**: Manages world state, room descriptions, player inventory, and scripted beats.
@@ -34,70 +34,60 @@ This repository currently serves as the design notebook and planning hub for the
 3. **Content library**: Structured lore, characters, and scene templates inspired by the novel.
 4. **Data layer**: Persists sessions, players, and branching history for analysis and replay.
 
-## Getting Started (Work in Progress)
-The execution pipeline is under development. Once the initial engine lands, the setup is expected to follow a flow similar to the one below:
+## Getting Started
+
+### Running Locally (Development)
 
 ```bash
 # clone the repository
- git clone https://github.com/your-username/jinpingmei-ai-game.git
- cd jinpingmei-ai-game
+git clone https://github.com/your-username/jinpingmei-ai-game.git
+cd jinpingmei-ai-game
 
-# install prerequisites (planned)
- # - .NET SDK 8.0+
- # - Access token for the chosen LLM provider
+# install prerequisites
+# - .NET SDK 9.0+
+# - Access token for the chosen LLM provider (set in .env file)
 
-# run the telnet host (listens on 127.0.0.1:2325 by default)
+# run the game as a console application
 dotnet run --project src/JinPingMei.Game
 
-# connect from another terminal using one of these methods:
-
-# Option 1: Use a proper telnet client (RECOMMENDED for full features)
-# - PuTTY: https://www.putty.org/
-# - iTerm2 + brew install telnet
-# - Mudlet: https://www.mudlet.org/
-telnet 127.0.0.1 2325
-
-# Option 2: Use the provided Python script (filters telnet negotiation bytes)
-./scripts/connect-clean.py
-
-# Option 3: Use nc with raw terminal mode script
-./scripts/connect-raw.sh
-
-# Option 4: Use nc directly (simple but shows telnet protocol bytes)
-nc 127.0.0.1 2325
+# The game runs directly in your terminal - no network connection needed!
 ```
 
-### Important Connection Notes for Contributors
+### Production Deployment (Optional SSH Access)
 
-The server implements proper telnet negotiation for character-at-a-time mode and server-side echo to support:
-- **CJK character input** - Chinese, Japanese, and Korean characters work correctly
-- **Backspace handling** - Properly deletes wide characters and emoji
-- **Arrow key navigation** - Move cursor left/right within input line
+For remote/multi-user deployment, the console application can be served over SSH without any code changes:
 
-**For best experience, use a proper telnet client** like PuTTY, iTerm2+telnet, or Mudlet. These clients:
-- Handle telnet protocol negotiation transparently
-- Support character-at-a-time mode for immediate input
-- Enable arrow keys and advanced editing features
-- Properly display CJK characters without garbled bytes
+```bash
+# On the server, configure SSH to launch the game
+# Edit /etc/ssh/sshd_config:
+Match User gameuser
+    ForceCommand /usr/bin/dotnet /path/to/JinPingMei.Game.dll
+    PasswordAuthentication yes
+    PermitTTY yes
 
-**Alternative connections:**
-- `./scripts/connect-clean.py` - Filters telnet bytes for clean display with basic clients
-- `./scripts/connect-raw.sh` - Uses nc in raw terminal mode
-- Plain `nc` - Simple but will show telnet negotiation as `������"����` characters
+# Players connect via SSH:
+ssh gameuser@yourserver.com
+# The game launches automatically!
+```
 
-**Known Issues:**
-- macOS default telnet has broken UTF-8 input - install GNU telnet with `brew install telnet`
-- Simple TCP clients (nc, netcat) show raw telnet protocol bytes
-- Without proper client, arrow keys may display as `^[[D` instead of moving cursor
+### Architecture Benefits
+
+This console-first approach provides:
+- **Simple development**: Run and debug directly in your IDE (F5 in Visual Studio/Rider)
+- **No network complexity**: Game logic is separate from transport layer
+- **Flexible deployment**: Can run locally, via SSH, or even in Docker
+- **Full terminal support**: Console.ReadLine() and WriteLine() work identically whether local or remote
+- **Security**: When using SSH deployment, OpenSSH handles all encryption and authentication
 
 While infrastructure code is being authored, you can use this README as a reference for design goals, contribute narrative ideas, or help shape the engine architecture.
 
 ## Roadmap Ideas
-- Bootstrap the core MUD loop with rooms, NPCs, and command parsing.
+- Bootstrap the core game loop with rooms, NPCs, and command parsing.
 - Implement prompt templates and safety filters for AI-driven narration.
 - Add session persistence, save slots, and analytics hooks.
 - Layer in annotations, glossaries, and cultural background modules.
 - Package curated scenarios that retell major arcs from the source novel.
+- Add terminal capability detection for advanced TUI features (colors, cursor positioning).
 
 ## Contributing
 Contributions are welcome once the initial scaffold is live. Suggested ways to help today:

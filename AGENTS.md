@@ -1,20 +1,23 @@
 # Repository Guidelines
 
 ## Project Structure & Modules
-- `src/` holds production code: `JinPingMei.Game` (console host), `JinPingMei.Engine` (gameplay orchestration), `JinPingMei.AI` (LLM integration stubs), `JinPingMei.Content` (lore and data providers).
+- `src/` holds production code: `JinPingMei.Game` (console application), `JinPingMei.Engine` (gameplay orchestration), `JinPingMei.AI` (LLM integration stubs), `JinPingMei.Content` (lore and data providers).
 - `tests/` contains unit-test projects; today only `JinPingMei.Engine.Tests` verifies orchestration seams.
 - `data/source-texts/` stores reference materials such as the 《金瓶梅詞話（萬曆本）》 transcript. Treat this as read-only input.
 
 ## Architecture & Performance Principles
-- First principle: keep the runtime lightweight, fast, and fault tolerant so one host can serve thousands of telnet users with minimal memory and CPU.
-- Target a lightweight, event-driven architecture tuned for high concurrency; prefer async/await and `Socket` APIs that minimize allocations.
-- Leverage .NET 9 server features (e.g., improved `TcpListener.AcceptTcpClientAsync`, cancellation tokens, `ValueTask`) to keep the telnet host responsive under load.
-- Design for graceful degradation: enforce per-session timeouts, guard critical sections, and fail fast on malformed input so one client cannot exhaust system resources.
+- First principle: keep the runtime lightweight, fast, and responsive as a console application.
+- The game is now a pure console application - no embedded server or network code.
+- For multi-user deployment, use SSH with ForceCommand to launch the console app per connection.
+- Leverage .NET 9 features (async/await, cancellation tokens, `ValueTask`) for responsive gameplay.
+- Design for simplicity: Console.ReadLine() for input, Console.WriteLine() for output.
+- Terminal capabilities (colors, cursor control) can be detected and used when available.
 
 ## Build, Test, and Development Commands
 - `dotnet build JinPingMei.sln` compiles every project with the pinned .NET SDK (see `global.json`).
 - `dotnet test JinPingMei.sln` runs the xUnit suite and collects coverage via the default runner.
-- `dotnet run --project src/JinPingMei.Game` starts the telnet server on `127.0.0.1:2323`; connect via `telnet 127.0.0.1 2323` from another terminal.
+- `dotnet run --project src/JinPingMei.Game` starts the game directly in your terminal as a console application.
+- For debugging: Open in Visual Studio/Rider and press F5 to run with debugger attached.
 
 ## Coding Style & Naming Conventions
 - Follow .NET conventions: PascalCase for public types/methods, camelCase for locals and private fields (prefix with `_` only for private fields, e.g., `_director`).
@@ -49,5 +52,7 @@
 - Sensitive source texts remain in `data/`; avoid exporting or publishing them without confirming licensing obligations.
 
 ## Agent Workflow Notes
-- Before running integration smoke tests, stop any existing processes holding the telnet testing ports to avoid `Address already in use` errors.
-- Run long-lived commands (for example `dotnet run`, `npm run dev`) in a separate shell or launch them in the background so they never block other automation steps.
+- The game is now a console application - no network ports or servers involved.
+- For testing, you can pipe input: `echo "/help\n/quit" | dotnet run --project src/JinPingMei.Game`
+- Console.ReadKey() is only used for "Press any key to exit" - all game input uses Console.ReadLine().
+- When running automated tests, input can be redirected from files or scripts.
