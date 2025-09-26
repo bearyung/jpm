@@ -43,14 +43,15 @@ public class GameSessionTests
     }
 
     [Fact]
-    public void HandleInput_LookCommand_ReturnsSceneOverview()
+    public void HandleInput_LookCommand_ReturnsDisplayMarker()
     {
         var session = CreateSession();
 
         var result = session.HandleInput("/look");
 
-        Assert.Contains(result.Lines, line => line.Contains("清河集市"));
-        Assert.Contains(result.Lines, line => line.Contains("可前往"));
+        // Now returns a special marker for SpectreConsoleGame to render
+        Assert.Single(result.Lines);
+        Assert.Equal("[LOOK_DISPLAY]", result.Lines[0]);
     }
 
     [Fact]

@@ -1,20 +1,33 @@
 # Repository Guidelines
 
+## CLI-First User Experience Philosophy
+- **Minimalist by Default**: The interface should be clean and uncluttered - no persistent UI elements
+- **Information on Demand**: Display information only when the user requests it (via commands like `/status`, `/help`)
+- **Respect Terminal Conventions**: Follow established CLI patterns that users already know
+- **Natural Text Flow**: Let output scroll naturally like traditional command-line tools
+- **Command-Driven Interaction**: All features accessible through clear, memorable commands
+- **No Visual Pollution**: Avoid decorative frames, boxes, or panels unless specifically requested
+- **Progressive Disclosure**: Show only essential information initially, with details available through commands
+
 ## Project Structure & Modules
-- `src/` holds production code: `JinPingMei.Game` (console host), `JinPingMei.Engine` (gameplay orchestration), `JinPingMei.AI` (LLM integration stubs), `JinPingMei.Content` (lore and data providers).
+- `src/` holds production code: `JinPingMei.Game` (console application), `JinPingMei.Engine` (gameplay orchestration), `JinPingMei.AI` (LLM integration stubs), `JinPingMei.Content` (lore and data providers).
 - `tests/` contains unit-test projects; today only `JinPingMei.Engine.Tests` verifies orchestration seams.
 - `data/source-texts/` stores reference materials such as the 《金瓶梅詞話（萬曆本）》 transcript. Treat this as read-only input.
 
 ## Architecture & Performance Principles
-- First principle: keep the runtime lightweight, fast, and fault tolerant so one host can serve thousands of telnet users with minimal memory and CPU.
-- Target a lightweight, event-driven architecture tuned for high concurrency; prefer async/await and `Socket` APIs that minimize allocations.
-- Leverage .NET 9 server features (e.g., improved `TcpListener.AcceptTcpClientAsync`, cancellation tokens, `ValueTask`) to keep the telnet host responsive under load.
-- Design for graceful degradation: enforce per-session timeouts, guard critical sections, and fail fast on malformed input so one client cannot exhaust system resources.
+- **CLI-First Design**: Build a true command-line experience that feels native to the terminal
+- Keep the runtime lightweight, fast, and responsive as a console application
+- The game is a pure console application - no embedded server or network code
+- For multi-user deployment, use SSH with ForceCommand to launch the console app per connection
+- Leverage .NET 9 features (async/await, cancellation tokens, `ValueTask`) for responsive gameplay
+- **Selective Rich UI**: Use Spectre.Console for formatted displays only when explicitly requested (e.g., `/status` command)
+- Terminal capabilities are handled by Spectre.Console which provides consistent cross-platform rendering
 
 ## Build, Test, and Development Commands
 - `dotnet build JinPingMei.sln` compiles every project with the pinned .NET SDK (see `global.json`).
 - `dotnet test JinPingMei.sln` runs the xUnit suite and collects coverage via the default runner.
-- `dotnet run --project src/JinPingMei.Game` starts the telnet server on `127.0.0.1:2323`; connect via `telnet 127.0.0.1 2323` from another terminal.
+- `dotnet run --project src/JinPingMei.Game` starts the game directly in your terminal with Spectre.Console UI.
+- For debugging: Open in Visual Studio/Rider and press F5 to run with debugger attached.
 
 ## Coding Style & Naming Conventions
 - Follow .NET conventions: PascalCase for public types/methods, camelCase for locals and private fields (prefix with `_` only for private fields, e.g., `_director`).
@@ -49,5 +62,31 @@
 - Sensitive source texts remain in `data/`; avoid exporting or publishing them without confirming licensing obligations.
 
 ## Agent Workflow Notes
-- Before running integration smoke tests, stop any existing processes holding the telnet testing ports to avoid `Address already in use` errors.
-- Run long-lived commands (for example `dotnet run`, `npm run dev`) in a separate shell or launch them in the background so they never block other automation steps.
+- The game is now a console application - no network ports or servers involved.
+- For testing, you can pipe input: `echo "/help\n/quit" | dotnet run --project src/JinPingMei.Game`
+- Input handling uses Console.ReadLine() wrapped by Spectre.Console for rich formatting.
+- When running automated tests, input can be redirected from files or scripts.
+
+## UI Development Guidelines
+
+### CLI-First Principles
+- **No Persistent UI**: Never display fixed panels, status bars, or frames that persist on screen
+- **Command-Driven Display**: All information displays should be triggered by user commands
+- **Clean Prompt**: Keep the input prompt simple and unobtrusive (e.g., a simple `>` character)
+- **Scrollable History**: Ensure all output becomes part of the scrollable terminal history
+- **Minimal Chrome**: Avoid decorative elements unless they serve a specific purpose
+
+### Using Spectre.Console
+- **On-Demand Rich Display**: Use Panel, Table, and other components only for command responses (e.g., `/status`)
+- **Selective Formatting**: Apply markup for emphasis sparingly - let the content speak for itself
+- **Status Command**: Use Panel components for `/status` display with clear, structured information
+- **Consistent but Minimal**: When rich formatting is used, keep it subtle and consistent
+- **Avoid Manual Drawing**: Never manually draw box characters - use Spectre.Console components
+- **Cross-Platform**: Spectre.Console ensures consistent display across all terminals
+
+### User-Friendly Commands
+- **Standard Commands**: Provide familiar commands like `/help`, `/status`, `/clear`, `/quit`
+- **Command Discovery**: Make commands discoverable through `/help` and contextual hints
+- **Minimal Typing**: Keep command names short and memorable
+- **Clear Feedback**: Provide immediate, clear feedback for all commands
+- **Error Recovery**: Give helpful error messages with suggestions for correct usage
