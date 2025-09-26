@@ -20,6 +20,8 @@ public sealed class SpectreConsoleGame
     private readonly GameSession _gameSession;
     private readonly List<string> _commandHistory = new();
     private const int MaxCommandHistory = 50;
+    private int _lastTerminalWidth;
+    private int _lastTerminalHeight;
 
     public SpectreConsoleGame(
         ILogger<SpectreConsoleGame>? logger = null,
@@ -69,6 +71,10 @@ public sealed class SpectreConsoleGame
 
     private void DisplayWelcome()
     {
+        // Store initial terminal size
+        _lastTerminalWidth = AnsiConsole.Profile.Width;
+        _lastTerminalHeight = AnsiConsole.Profile.Height;
+
         AnsiConsole.WriteLine(_gameSession.RenderIntro());
         AnsiConsole.WriteLine();
 
@@ -77,13 +83,77 @@ public sealed class SpectreConsoleGame
         AnsiConsole.WriteLine();
     }
 
+    private bool CheckForTerminalResize()
+    {
+        var currentWidth = AnsiConsole.Profile.Width;
+        var currentHeight = AnsiConsole.Profile.Height;
+
+        if (currentWidth != _lastTerminalWidth || currentHeight != _lastTerminalHeight)
+        {
+            _lastTerminalWidth = currentWidth;
+            _lastTerminalHeight = currentHeight;
+            return true;
+        }
+
+        return false;
+    }
+
+    private void OnTerminalResized()
+    {
+        // Clear the entire screen
+        AnsiConsole.Clear();
+
+        // Display current location header
+        var locationName = _gameSession.GetCurrentLocationDisplayName();
+        var rule = new Rule($"[yellow]{locationName}[/]")
+            .RuleStyle(Style.Parse("blue"))
+            .LeftJustified();
+        AnsiConsole.Write(rule);
+        AnsiConsole.WriteLine();
+
+        // Redisplay the last few commands from history
+        // Only show recent commands to avoid cluttering after resize
+        const int recentCommandCount = 5;
+        var startIndex = Math.Max(0, _commandHistory.Count - recentCommandCount);
+
+        if (_commandHistory.Count > 0 && startIndex < _commandHistory.Count)
+        {
+            AnsiConsole.MarkupLine("[dim]... (之前的指令) ...[/]");
+            AnsiConsole.WriteLine();
+
+            for (int i = startIndex; i < _commandHistory.Count; i++)
+            {
+                var command = _commandHistory[i];
+                AnsiConsole.MarkupLine($"[dim]> {command}[/]");
+            }
+
+            AnsiConsole.WriteLine();
+        }
+
+        // Display a resize notification
+        AnsiConsole.MarkupLine($"[dim italic]（視窗已調整為 {_lastTerminalWidth}×{_lastTerminalHeight}）[/]");
+        AnsiConsole.WriteLine();
+    }
+
     private async Task RunGameLoopAsync(CancellationToken cancellationToken)
     {
         var isFirstPrompt = true;
         var needsPromptSpacing = false;
+        var lastResizeCheck = DateTime.UtcNow;
+        var resizeCheckInterval = TimeSpan.FromSeconds(1); // Check every second
 
         while (!cancellationToken.IsCancellationRequested)
         {
+            // Check for terminal resize periodically
+            if (DateTime.UtcNow - lastResizeCheck > resizeCheckInterval)
+            {
+                if (CheckForTerminalResize())
+                {
+                    OnTerminalResized();
+                }
+                lastResizeCheck = DateTime.UtcNow;
+            }
+
             // Add spacing if needed
             if (!isFirstPrompt && needsPromptSpacing)
             {
