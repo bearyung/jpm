@@ -72,18 +72,8 @@ public sealed class ConsoleGame
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            // Only use advanced terminal features if not redirected
-            if (!Console.IsInputRedirected && !Console.IsOutputRedirected)
-            {
-                // Clear screen and redraw everything
-                await _terminal.ClearScreenAsync(cancellationToken);
-
-                // Display footer
-                await DisplayFooterAsync(cancellationToken);
-
-                // Position cursor at input line (leaving space for footer)
-                await _terminal.PositionCursorForInputAsync(cancellationToken);
-            }
+            // Display footer before each prompt (like CLI tools)
+            await DisplayFooterAsync(cancellationToken);
 
             // Display prompt
             await _terminal.WriteAsync("> ", cancellationToken);
@@ -121,19 +111,14 @@ public sealed class ConsoleGame
                 continue;
             }
 
-            // Display response with footer intact
-            if (!Console.IsInputRedirected && !Console.IsOutputRedirected)
+            // Display response (all modes)
+            foreach (var responseLine in commandResult.Lines)
             {
-                await DisplayResponseWithFooterAsync(commandResult, cancellationToken);
+                await _terminal.WriteLineAsync(responseLine, cancellationToken);
             }
-            else
-            {
-                // Simple display for piped/redirected output
-                foreach (var responseLine in commandResult.Lines)
-                {
-                    await _terminal.WriteLineAsync(responseLine, cancellationToken);
-                }
-            }
+
+            // Add spacing after response
+            await _terminal.WriteLineAsync("", cancellationToken);
 
             // Check if user wants to quit
             if (commandResult.ShouldDisconnect)
@@ -144,29 +129,10 @@ public sealed class ConsoleGame
         }
     }
 
-    private async Task DisplayResponseWithFooterAsync(CommandResult result, CancellationToken cancellationToken)
-    {
-        // Clear the main content area but keep footer
-        await _terminal.ClearMainAreaAsync(cancellationToken);
-
-        // Display response lines
-        foreach (var responseLine in result.Lines)
-        {
-            await _terminal.WriteLineAsync(responseLine, cancellationToken);
-        }
-
-        await _terminal.WriteLineAsync("", cancellationToken);
-        await _terminal.WriteLineAsync("Press Enter to continue...", cancellationToken);
-
-        // Wait for user to press Enter
-        await _terminal.ReadLineAsync(cancellationToken);
-    }
 
     private async Task DisplayFooterAsync(CancellationToken cancellationToken)
     {
-        // Only display footer for interactive terminals
-        if (Console.IsInputRedirected || Console.IsOutputRedirected)
-            return;
+        // Display footer in all modes, but make it subtle for piped output
 
         var playerName = _gameSession.State.HasPlayerName
             ? _gameSession.State.PlayerName
@@ -176,24 +142,32 @@ public sealed class ConsoleGame
 
         var shortcuts = "Ctrl+C:退出 | /help:指令 | /quit:離線";
 
-        // Position cursor at bottom of screen
-        await _terminal.PositionCursorAtBottomAsync(cancellationToken);
-
-        // Draw separator line
-        var width = Console.WindowWidth;
-        var separator = new string('─', Math.Max(1, width));
-        await _terminal.WriteLineAsync(separator, cancellationToken);
+        // For interactive terminals, use a visual separator
+        if (!Console.IsInputRedirected && !Console.IsOutputRedirected)
+        {
+            // Draw separator line
+            var width = Math.Min(Console.WindowWidth, 80); // Cap at 80 chars for readability
+            var separator = new string('─', Math.Max(1, width));
+            await _terminal.WriteLineAsync(separator, cancellationToken);
+        }
 
         // Format footer line: Player | Location | Shortcuts
         var footerText = $"玩家: {playerName} | 位置: {locationName} | {shortcuts}";
 
-        // Truncate if too long for terminal width
-        if (footerText.Length > width)
+        // For interactive terminals, truncate if needed
+        if (!Console.IsInputRedirected && !Console.IsOutputRedirected)
         {
-            footerText = footerText.Substring(0, Math.Max(1, width - 3)) + "...";
+            var width = Console.WindowWidth;
+            if (footerText.Length > width)
+            {
+                footerText = footerText.Substring(0, Math.Max(1, width - 3)) + "...";
+            }
         }
 
         await _terminal.WriteLineAsync(footerText, cancellationToken);
+
+        // Add a blank line for spacing
+        await _terminal.WriteLineAsync("", cancellationToken);
     }
 
 }
@@ -228,69 +202,6 @@ internal sealed class ConsoleTerminal
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask ClearScreenAsync(CancellationToken cancellationToken = default)
-    {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return ValueTask.FromCanceled(cancellationToken);
-        }
-
-        if (!Console.IsOutputRedirected)
-        {
-            Console.Clear();
-        }
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask ClearMainAreaAsync(CancellationToken cancellationToken = default)
-    {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return ValueTask.FromCanceled(cancellationToken);
-        }
-
-        if (!Console.IsOutputRedirected)
-        {
-            // Move cursor to top and clear downward (leaving footer at bottom)
-            Console.SetCursorPosition(0, 0);
-            var height = Console.WindowHeight - 3; // Leave space for separator and footer
-            for (int i = 0; i < height; i++)
-            {
-                Console.WriteLine(new string(' ', Console.WindowWidth));
-            }
-            Console.SetCursorPosition(0, 0);
-        }
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask PositionCursorAtBottomAsync(CancellationToken cancellationToken = default)
-    {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return ValueTask.FromCanceled(cancellationToken);
-        }
-
-        if (!Console.IsOutputRedirected)
-        {
-            Console.SetCursorPosition(0, Console.WindowHeight - 2);
-        }
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask PositionCursorForInputAsync(CancellationToken cancellationToken = default)
-    {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return ValueTask.FromCanceled(cancellationToken);
-        }
-
-        if (!Console.IsOutputRedirected)
-        {
-            // Position cursor for input (above footer)
-            Console.SetCursorPosition(0, Console.WindowHeight - 4);
-        }
-        return ValueTask.CompletedTask;
-    }
 
     public ValueTask<string?> ReadLineAsync(CancellationToken cancellationToken = default)
     {

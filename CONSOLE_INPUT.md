@@ -20,9 +20,9 @@ Run the game interactively and test:
 3. Use arrow keys to navigate through text
 4. Mix ASCII and Chinese: Test測試
 
-## Persistent Footer
+## Status Footer
 
-The console game displays a persistent footer showing player stats and shortcuts (interactive mode only).
+The console game displays status information and shortcuts after each interaction, like traditional CLI tools (git, npm, etc.).
 
 ### Footer Features
 
@@ -35,27 +35,41 @@ The console game displays a persistent footer showing player stats and shortcuts
 
 ### Footer Behavior
 
-- Only displays in interactive terminals (not when input/output is redirected)
-- Automatically truncates if terminal width is too small
-- Updates dynamically when player moves to new locations
-- Updates when player sets their name with `/name <名字>`
+- **Natural Flow**: Appears inline after each command response, preserving scroll history
+- **Scrollback Support**: All interactions remain in terminal history for scrolling back
+- **CLI-Style**: Behaves like `git status`, `npm run`, and other CLI tools
+- **Interactive Separator**: Shows visual separator (`────`) in interactive terminals
+- **Clean Piped Output**: Minimal footer for automated/scripted usage
+- **Auto-truncate**: Automatically truncates for narrow terminals in interactive mode
 
 ### Testing Footer
 
-Run the game interactively:
+Run the game interactively and see natural flow:
 ```bash
 dotnet run --project src/JinPingMei.Game
+# Try multiple commands: /help, /look, etc.
+# Scroll back in terminal to see full history
 ```
 
-Footer should appear at bottom with:
+Example output flow:
 ```
-────────────────────────────────────────────────────────────────
+[previous content remains visible]
+────────────────────────────────────────────────
 玩家: 旅人 | 位置: 清河城 › 清河集市 | Ctrl+C:退出 | /help:指令 | /quit:離線
+
+> /help
+目前可用指令：/help、/name <名字>、/look...
+
+────────────────────────────────────────────────
+玩家: 旅人 | 位置: 清河城 › 清河集市 | Ctrl+C:退出 | /help:指令 | /quit:離線
+
+> /look
+您身處於：清河集市...
 ```
 
-Test with piped input (should not show footer):
+Test clean piped output:
 ```bash
-echo "/quit" | dotnet run --project src/JinPingMei.Game
+echo -e "/help\n/quit" | dotnet run --project src/JinPingMei.Game
 ```
 
 ### Terminal Requirements
