@@ -73,7 +73,8 @@ public sealed class GoCommandHandler : ICommandHandler
     {
         if (string.IsNullOrWhiteSpace(arguments))
         {
-            return CommandResult.FromMessage(context.Localize("commands.go.prompt"));
+            // Return special marker for SpectreConsoleGame to show SelectionPrompt
+            return CommandResult.FromMessage("[GO_SELECT_DISPLAY]");
         }
 
         if (context.World.TryMove(arguments, out var exit))

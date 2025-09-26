@@ -300,6 +300,14 @@ public sealed class SpectreConsoleGame
                 continue;
             }
 
+            // Check for GO_SELECT_DISPLAY marker
+            if (commandResult.Lines.Count == 1 && commandResult.Lines[0] == "[GO_SELECT_DISPLAY]")
+            {
+                HandleGoSelection();
+                needsPromptSpacing = true;
+                continue;
+            }
+
             // Display response (skip special display markers)
             foreach (var responseLine in commandResult.Lines)
             {
@@ -458,6 +466,66 @@ public sealed class SpectreConsoleGame
         };
 
         AnsiConsole.Write(panel);
+    }
+
+    private void HandleGoSelection()
+    {
+        var snapshot = _gameSession.GetCurrentSceneSnapshot();
+
+        // Check if there are any exits available
+        if (snapshot.Exits.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[yellow]這個位置沒有可前往的地點。[/]");
+            return;
+        }
+
+        // Create selection prompt with available exits
+        var prompt = new SelectionPrompt<string>()
+            .Title("[bold cyan]請選擇要前往的地點：[/]")
+            .PageSize(10)
+            .MoreChoicesText("[dim](使用上下方向鍵移動，Enter 選擇)[/]");
+
+        // Add cancel option first
+        prompt.AddChoice("[red]取消[/]");
+
+        // Add each available exit as a choice
+        foreach (var exit in snapshot.Exits)
+        {
+            var choice = exit.DisplayName;
+            if (!string.IsNullOrWhiteSpace(exit.Description))
+            {
+                choice += $" [dim]({exit.Description})[/]";
+            }
+            prompt.AddChoice(choice);
+        }
+
+        // Show the prompt and get selection
+        var selection = AnsiConsole.Prompt(prompt);
+
+        // Handle the selection
+        if (selection == "[red]取消[/]")
+        {
+            AnsiConsole.MarkupLine("[dim]已取消前往。[/]");
+            return;
+        }
+
+        // Extract the actual location name (remove description if present)
+        var locationName = selection;
+        var descriptionIndex = locationName.IndexOf(" [dim](");
+        if (descriptionIndex > 0)
+        {
+            locationName = locationName.Substring(0, descriptionIndex);
+        }
+
+        // Execute the go command with the selected location
+        var goCommand = $"/go {locationName}";
+        var commandResult = _gameSession.HandleInput(goCommand);
+
+        // Display the result
+        foreach (var line in commandResult.Lines)
+        {
+            AnsiConsole.WriteLine(line);
+        }
     }
 
     private void DisplayInventory()
