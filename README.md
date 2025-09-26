@@ -47,8 +47,13 @@ cd jinpingmei-ai-game
 # - .NET SDK 9.0+
 # - Access token for the chosen LLM provider (set in .env file)
 
-# run the game as a console application
+# run the game in plain console mode
 dotnet run --project src/JinPingMei.Game
+
+# run the game with Terminal UI (TUI) mode
+dotnet run --project src/JinPingMei.Game -- --tui
+# or
+dotnet run --project src/JinPingMei.Game -- --terminal-gui
 
 # The game runs directly in your terminal - no network connection needed!
 ```

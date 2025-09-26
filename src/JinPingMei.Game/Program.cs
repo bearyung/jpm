@@ -44,48 +44,67 @@ var localizationProvider = new JsonLocalizationProvider(
 // Create game session factory (with a null diagnostics for console mode)
 var sessionFactory = new GameSessionFactory(localizationProvider, new NullDiagnostics());
 
-// Create and run the console game
-var game = new ConsoleGame(
-    loggerFactory.CreateLogger<ConsoleGame>(),
-    sessionFactory);
+var useTerminalGui = args.Any(static arg =>
+    string.Equals(arg, "--tui", StringComparison.OrdinalIgnoreCase) ||
+    string.Equals(arg, "--terminal-gui", StringComparison.OrdinalIgnoreCase));
 
 // Setup cancellation
 using var cts = new CancellationTokenSource();
 
-Console.CancelKeyPress += (_, args) =>
+Console.CancelKeyPress += (_, eventArgs) =>
 {
-    args.Cancel = true;
+    eventArgs.Cancel = true;
     cts.Cancel();
 };
 
-// Display startup message
-Console.Clear();
-Console.WriteLine("====== 金瓶梅 JinPingMei - 互動敘事實驗 ======");
-Console.WriteLine();
-
-// Run the game
 try
 {
-    await game.RunAsync(cts.Token);
+    if (useTerminalGui)
+    {
+        var tuiLogger = loggerFactory.CreateLogger<SpectreConsoleGame>();
+        var tuiGame = new SpectreConsoleGame(tuiLogger, sessionFactory);
+        await tuiGame.RunAsync(cts.Token);
+    }
+    else
+    {
+        var consoleLogger = loggerFactory.CreateLogger<ConsoleGame>();
+        var game = new ConsoleGame(consoleLogger, sessionFactory);
+
+        Console.Clear();
+        Console.WriteLine("====== 金瓶梅 JinPingMei - 互動敘事實驗 ======");
+        Console.WriteLine();
+
+        await game.RunAsync(cts.Token);
+
+        // Only wait for key press if we're in an interactive console
+        if (!Console.IsInputRedirected)
+        {
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey(intercept: true);
+        }
+    }
 }
 catch (OperationCanceledException)
 {
-    Console.WriteLine("\nGame interrupted by user.");
+    if (!useTerminalGui)
+    {
+        Console.WriteLine("\nGame interrupted by user.");
+    }
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"\nAn error occurred: {ex.Message}");
-    if (loggerFactory.CreateLogger<Program>().IsEnabled(LogLevel.Debug))
+    if (!useTerminalGui)
     {
-        Console.WriteLine(ex.StackTrace);
+        Console.WriteLine($"\nAn error occurred: {ex.Message}");
+        if (loggerFactory.CreateLogger<Program>().IsEnabled(LogLevel.Debug))
+        {
+            Console.WriteLine(ex.StackTrace);
+        }
     }
-}
-
-// Only wait for key press if we're in an interactive console
-if (!Console.IsInputRedirected)
-{
-    Console.WriteLine("\nPress any key to exit...");
-    Console.ReadKey(intercept: true);
+    else
+    {
+        loggerFactory.CreateLogger<Program>().LogError(ex, "Unhandled exception in Terminal GUI mode");
+    }
 }
 
 static void LoadEnvFiles()
