@@ -1,4 +1,5 @@
 using System.Text;
+using Rune = System.Text.Rune;
 using JinPingMei.Game.Hosting.Text;
 using Xunit;
 
