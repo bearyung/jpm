@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using JinPingMei.Engine.Story;
 using JinPingMei.Game.Hosting;
 using JinPingMei.Game.Hosting.Commands;
 using JinPingMei.Game.Localization;
@@ -151,7 +152,8 @@ public sealed class SpectreConsoleGame
 
             // Handle display commands using Spectre.Console components
             if (trimmedInput.Equals("/look", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/l", StringComparison.OrdinalIgnoreCase))  // Allow shortcut
+                trimmedInput.Equals("/l", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("看"))  // Chinese shortcut
             {
                 DisplayLook();
                 needsPromptSpacing = true;
@@ -159,7 +161,8 @@ public sealed class SpectreConsoleGame
             }
 
             if (trimmedInput.Equals("/status", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/s", StringComparison.OrdinalIgnoreCase))  // Allow shortcut
+                trimmedInput.Equals("/s", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("狀態"))  // Chinese shortcut
             {
                 DisplayStatus();
                 needsPromptSpacing = true;
@@ -167,7 +170,8 @@ public sealed class SpectreConsoleGame
             }
 
             if (trimmedInput.Equals("/map", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/m", StringComparison.OrdinalIgnoreCase))  // Allow shortcut
+                trimmedInput.Equals("/m", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("地圖"))  // Chinese shortcut
             {
                 DisplayMap();
                 needsPromptSpacing = true;
@@ -176,7 +180,8 @@ public sealed class SpectreConsoleGame
 
             if (trimmedInput.Equals("/inventory", StringComparison.OrdinalIgnoreCase) ||
                 trimmedInput.Equals("/inv", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/i", StringComparison.OrdinalIgnoreCase))  // Allow shortcuts
+                trimmedInput.Equals("/i", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("物品"))  // Chinese shortcut
             {
                 DisplayInventory();
                 needsPromptSpacing = true;
@@ -191,10 +196,31 @@ public sealed class SpectreConsoleGame
                 continue;
             }
 
+            if (trimmedInput.Equals("/progress", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("/p", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("進度"))  // Chinese shortcut
+            {
+                DisplayProgress();
+                needsPromptSpacing = true;
+                continue;
+            }
+
+            if (trimmedInput.Equals("/progress detail", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("/pd", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("進度詳情"))  // Chinese shortcut
+            {
+                DisplayProgressDetail();
+                needsPromptSpacing = true;
+                continue;
+            }
+
+            // Convert Chinese shortcuts to their command equivalents
+            var processedInput = ConvertChineseShortcut(trimmedInput);
+
             CommandResult commandResult;
             try
             {
-                commandResult = _gameSession.HandleInput(trimmedInput);
+                commandResult = _gameSession.HandleInput(processedInput);
             }
             catch (Exception ex)
             {
@@ -388,6 +414,198 @@ public sealed class SpectreConsoleGame
         AnsiConsole.Write(panel);
     }
 
+    private void DisplayProgress()
+    {
+        // Check if story is loaded
+        var story = _gameSession.Story;
+        if (story is null)
+        {
+            AnsiConsole.MarkupLine("[red]尚未載入劇情模組。[/]");
+            return;
+        }
+
+        // Get progress data from story
+        var progressData = story.GetProgressData();
+
+        // Show inline progress info that stays in conversation
+        DisplayProgressInfo(progressData);
+    }
+
+    private void DisplayProgressInfo(StoryProgressData progressData)
+    {
+        // Create a compact inline display
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine($"[bold cyan]【進度】[/] {progressData.VolumeTitle} • 第{progressData.CurrentChapterNumber}回 ({progressData.CurrentChapterIndex + 1}/{progressData.TotalChapters})");
+        AnsiConsole.MarkupLine($"[bold cyan]【任務】[/] 完成 {progressData.CompletedMissions}/{progressData.TotalMissions} ([yellow]{progressData.OverallProgress}%[/])");
+
+        // Show current scene if available
+        if (progressData.CurrentSceneTitle != null)
+        {
+            AnsiConsole.MarkupLine($"[bold cyan]【場景】[/] {progressData.CurrentSceneTitle} ({progressData.CurrentSceneIndex + 1}/{progressData.TotalScenesInChapter})");
+        }
+
+        // Quick mission summary
+        if (progressData.CurrentChapterMissions?.Count > 0)
+        {
+            var inProgress = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.InProgress);
+            var locked = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.Locked);
+            var completed = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.Completed);
+
+            AnsiConsole.MarkupLine($"[dim]       進行中: {inProgress} | 已完成: {completed} | 未解鎖: {locked}[/]");
+        }
+
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("[dim]輸入 [bold]/progress detail[/] 或 [bold]/pd[/] 查看完整任務列表[/]");
+    }
+
+    private void DisplayProgressDetail()
+    {
+        // Check if story is loaded
+        var story = _gameSession.Story;
+        if (story is null)
+        {
+            AnsiConsole.MarkupLine("[red]尚未載入劇情模組。[/]");
+            return;
+        }
+
+        // Get progress data and show full panel
+        var progressData = story.GetProgressData();
+        var panel = BuildProgressPanel(progressData);
+        AnsiConsole.Write(panel);
+    }
+
+    private Panel BuildProgressPanel(StoryProgressData progressData)
+    {
+        // Create a grid to organize all information
+        var mainGrid = new Grid();
+        mainGrid.AddColumn();
+
+        // Section 1: Volume and Episode Info
+        mainGrid.AddRow(new Rule("【當前進度】").RuleStyle("cyan"));
+        mainGrid.AddRow(new Markup($"[bold cyan]{progressData.VolumeTitle}[/] - [dim]{progressData.EpisodeLabel}[/]"));
+        mainGrid.AddRow(new Markup($"宿主：[yellow]{progressData.HostId ?? "未選擇"}[/]"));
+        mainGrid.AddEmptyRow();
+
+        // Section 2: Chapter Progress
+        mainGrid.AddRow(new Rule("【章節資訊】").RuleStyle("cyan"));
+        if (progressData.CurrentChapterNumber > 0)
+        {
+            mainGrid.AddRow(new Markup($"[bold]第{progressData.CurrentChapterNumber}回[/]"));
+            if (progressData.ChapterTitles?.Count > 0)
+            {
+                foreach (var title in progressData.ChapterTitles)
+                {
+                    mainGrid.AddRow(new Markup($"  [italic]{title}[/]"));
+                }
+            }
+            mainGrid.AddRow(new Markup($"進度：第 {progressData.CurrentChapterIndex + 1} 章 / 共 {progressData.TotalChapters} 章"));
+
+            if (progressData.CurrentSceneTitle != null)
+            {
+                mainGrid.AddEmptyRow();
+                mainGrid.AddRow(new Markup($"[bold]當前場景：[/]{progressData.CurrentSceneTitle} ({progressData.CurrentSceneIndex + 1}/{progressData.TotalScenesInChapter})"));
+                if (progressData.CurrentBeatProgress != null)
+                {
+                    mainGrid.AddRow(new Markup($"節拍進度：{progressData.CurrentBeatProgress}"));
+                }
+            }
+        }
+        else
+        {
+            mainGrid.AddRow(new Markup("[dim]尚未開始[/]"));
+        }
+        mainGrid.AddEmptyRow();
+
+        // Section 3: Mission Progress
+        mainGrid.AddRow(new Rule("【任務狀態】").RuleStyle("cyan"));
+
+        var missionTable = new Table()
+            .Border(TableBorder.None)
+            .HideHeaders()
+            .AddColumn(new TableColumn("").Width(4))
+            .AddColumn(new TableColumn(""));
+
+        if (progressData.CurrentChapterMissions?.Count > 0)
+        {
+            foreach (var mission in progressData.CurrentChapterMissions)
+            {
+                var statusIcon = mission.Status switch
+                {
+                    MissionStatus.Locked => "[red]🔒[/]",
+                    MissionStatus.InProgress => "[yellow]○[/]",
+                    MissionStatus.Completed => "[green]✓[/]",
+                    _ => "[dim]?[/]"
+                };
+
+                var titleMarkup = mission.Status switch
+                {
+                    MissionStatus.Locked => $"[dim strikethrough]{mission.Title}[/]",
+                    MissionStatus.InProgress => $"[bold yellow]{mission.Title}[/]",
+                    MissionStatus.Completed => $"[green strikethrough]{mission.Title}[/]",
+                    _ => mission.Title
+                };
+
+                missionTable.AddRow(statusIcon, titleMarkup);
+
+                if (mission.Status == MissionStatus.InProgress && !string.IsNullOrWhiteSpace(mission.Description))
+                {
+                    missionTable.AddRow("", $"[dim italic]  {mission.Description}[/]");
+                }
+            }
+        }
+        else
+        {
+            missionTable.AddRow("", "[dim]無任務[/]");
+        }
+
+        mainGrid.AddRow(missionTable);
+        mainGrid.AddEmptyRow();
+
+        // Section 4: Statistics
+        mainGrid.AddRow(new Rule("【整體統計】").RuleStyle("cyan"));
+
+        // Create a simple progress display
+        var chapterPercent = Math.Min(100, Math.Max(0, (int)progressData.ChapterProgress));
+        var missionPercent = Math.Min(100, Math.Max(0, (int)progressData.MissionProgress));
+
+        mainGrid.AddRow(new Markup($"章節進度：[cyan]{CreateProgressBar(chapterPercent)}[/] {chapterPercent}%"));
+        mainGrid.AddRow(new Markup($"任務進度：[green]{CreateProgressBar(missionPercent)}[/] {missionPercent}%"));
+        mainGrid.AddRow(new Markup($"[dim]已完成 {progressData.CompletedMissions}/{progressData.TotalMissions} 個任務[/]"));
+
+        // Section 5: Footer
+        mainGrid.AddEmptyRow();
+        mainGrid.AddRow(new Rule().RuleStyle("dim"));
+
+        // Wrap everything in a single panel
+        return new Panel(mainGrid)
+        {
+            Header = new PanelHeader(" 遊戲進度 "),
+            Border = BoxBorder.Rounded,
+            Padding = new Padding(2, 1),
+            Expand = false
+        };
+    }
+
+    private static void WaitForQuitKey()
+    {
+        while (true)
+        {
+            var key = Console.ReadKey(intercept: true);
+            if (key.Key == ConsoleKey.Q || key.Key == ConsoleKey.Escape)
+            {
+                break;
+            }
+        }
+    }
+
+    private static string CreateProgressBar(int percentage)
+    {
+        const int barLength = 20;
+        var filled = (int)(barLength * (percentage / 100.0));
+        var empty = barLength - filled;
+        return new string('█', filled) + new string('░', empty);
+    }
+
     private void DisplayCommands()
     {
         var grid = new Grid()
@@ -425,6 +643,27 @@ public sealed class SpectreConsoleGame
 
         grid.AddEmptyRow();
 
+        // Story and Progress commands
+        grid.AddRow(
+            "[bold underline cyan]劇情與進度[/]",
+            "",
+            ""
+        );
+
+        grid.AddRow(
+            new Markup("[cyan]/host <角色>[/]\n" +
+                      "  選擇故事宿主\n\n" +
+                      "[cyan]/story[/]\n" +
+                      "  查看故事狀態"),
+            new Markup("[cyan]/progress[/] [dim]([/][dim cyan]/p[/][dim])[/]\n" +
+                      "  查看進度摘要\n\n" +
+                      "[cyan]/progress detail[/] [dim]([/][dim cyan]/pd[/][dim])[/]\n" +
+                      "  查看詳細任務列表"),
+            new Markup("")
+        );
+
+        grid.AddEmptyRow();
+
         // System commands section
         grid.AddRow(
             "[bold underline cyan]系統指令[/]",
@@ -447,6 +686,8 @@ public sealed class SpectreConsoleGame
                       "  狀態 → /status\n" +
                       "  地圖 → /map\n" +
                       "  物品 → /inventory\n" +
+                      "  進度 → /progress\n" +
+                      "  進度詳情 → /pd\n" +
                       "  離開 → /quit")
         );
 
@@ -461,5 +702,29 @@ public sealed class SpectreConsoleGame
         AnsiConsole.Write(panel);
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine("[dim]提示：使用 /help 或 /h 查看快速指令參考[/]");
+    }
+
+    private static string ConvertChineseShortcut(string input)
+    {
+        // Convert Chinese commands to their /command equivalents
+        // Handle both standalone commands and commands with arguments
+        if (input.StartsWith("去"))
+        {
+            return input.Length > 1 ? $"/go{input[1..]}" : "/go";
+        }
+        if (input.StartsWith("說"))
+        {
+            return input.Length > 1 ? $"/say{input[1..]}" : "/say";
+        }
+        if (input.Equals("離開"))
+        {
+            return "/quit";
+        }
+        if (input.Equals("進度"))
+        {
+            return "/progress";
+        }
+
+        return input;
     }
 }

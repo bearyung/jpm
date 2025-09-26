@@ -38,6 +38,8 @@ public sealed class GameSession
 
     public SessionState State => _state;
 
+    public JinPingMei.Engine.Story.StorySession? Story => _story;
+
     public string GetCurrentLocationDisplayName()
     {
         return $"{_world.CurrentLocale.Name} › {_world.CurrentScene.Name}";
@@ -117,7 +119,8 @@ public sealed class GameSession
         var handlers = new List<ICommandHandler>
         {
             new HostCommandHandler(),
-            new StoryStatusCommandHandler()
+            new StoryStatusCommandHandler(),
+            new ProgressCommandHandler()
         };
 
         if (additional is not null)
