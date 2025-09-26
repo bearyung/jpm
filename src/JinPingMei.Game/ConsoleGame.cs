@@ -1,8 +1,11 @@
 using System;
+using System.Globalization;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JinPingMei.Game.Hosting;
 using JinPingMei.Game.Hosting.Commands;
+using JinPingMei.Game.Hosting.Text;
 using JinPingMei.Game.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -120,10 +123,13 @@ public sealed class ConsoleGame
 }
 
 /// <summary>
-/// Simple terminal wrapper for console I/O
+/// Enhanced terminal wrapper for console I/O with proper multibyte character support
 /// </summary>
 internal sealed class ConsoleTerminal
 {
+    private readonly GraphemeBuffer _buffer = new();
+    private readonly Decoder _decoder = Encoding.UTF8.GetDecoder();
+
     public ValueTask WriteAsync(string text, CancellationToken cancellationToken = default)
     {
         if (cancellationToken.IsCancellationRequested)
@@ -153,15 +159,273 @@ internal sealed class ConsoleTerminal
             return ValueTask.FromCanceled<string?>(cancellationToken);
         }
 
-        try
+        // If input is redirected (piped), use standard ReadLine
+        if (Console.IsInputRedirected)
         {
-            var line = Console.ReadLine();
-            return ValueTask.FromResult(line);
+            try
+            {
+                var line = Console.ReadLine();
+                return ValueTask.FromResult(line);
+            }
+            catch (Exception)
+            {
+                return ValueTask.FromResult<string?>(null);
+            }
         }
-        catch (Exception)
+
+        // For interactive console, use custom input handling with proper multibyte support
+        _buffer.MoveCursorToStart();
+        _buffer.TryDrain(out _); // Clear buffer
+
+        while (true)
         {
-            // End of input or error
-            return ValueTask.FromResult<string?>(null);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return ValueTask.FromCanceled<string?>(cancellationToken);
+            }
+
+            var key = Console.ReadKey(intercept: true);
+
+            // Handle special keys
+            if (key.Key == ConsoleKey.Enter)
+            {
+                Console.WriteLine();
+                _buffer.TryDrain(out var result);
+                return ValueTask.FromResult<string?>(result);
+            }
+
+            if (key.Key == ConsoleKey.Backspace)
+            {
+                HandleBackspace();
+                continue;
+            }
+
+            if (key.Key == ConsoleKey.Delete)
+            {
+                HandleDelete();
+                continue;
+            }
+
+            if (key.Key == ConsoleKey.LeftArrow)
+            {
+                HandleLeftArrow();
+                continue;
+            }
+
+            if (key.Key == ConsoleKey.RightArrow)
+            {
+                HandleRightArrow();
+                continue;
+            }
+
+            if (key.Key == ConsoleKey.Home)
+            {
+                HandleHome();
+                continue;
+            }
+
+            if (key.Key == ConsoleKey.End)
+            {
+                HandleEnd();
+                continue;
+            }
+
+            // Handle regular character input
+            if (key.KeyChar != '\0' && !char.IsControl(key.KeyChar))
+            {
+                // Convert character to Rune for proper Unicode handling
+                if (Rune.TryCreate(key.KeyChar, out var rune))
+                {
+                    AppendRune(rune);
+                }
+                else if (char.IsHighSurrogate(key.KeyChar))
+                {
+                    // Handle surrogate pairs for characters outside BMP
+                    var highSurrogate = key.KeyChar;
+                    var nextKey = Console.ReadKey(intercept: true);
+                    if (char.IsLowSurrogate(nextKey.KeyChar))
+                    {
+                        if (Rune.TryCreate(highSurrogate, nextKey.KeyChar, out rune))
+                        {
+                            AppendRune(rune);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void AppendRune(Rune rune)
+    {
+        var textAfterCursor = _buffer.GetTextAfterCursor();
+        var widthAfterCursor = _buffer.GetDisplayWidthAfterCursor();
+
+        _buffer.Append(rune);
+
+        // Echo the character
+        var ch = rune.ToString();
+        Console.Write(ch);
+
+        // If inserting in middle, rewrite text after cursor
+        if (!string.IsNullOrEmpty(textAfterCursor))
+        {
+            Console.Write(textAfterCursor);
+            // Move cursor back to correct position
+            for (int i = 0; i < widthAfterCursor; i++)
+            {
+                Console.Write('\b');
+            }
+        }
+    }
+
+    private void HandleBackspace()
+    {
+        // Check if we're deleting in the middle
+        var isMiddleDeletion = _buffer.CursorPosition < _buffer.Length;
+
+        // Get text after cursor before deletion
+        string? textAfterCursor = null;
+        int widthAfterCursor = 0;
+        if (isMiddleDeletion)
+        {
+            textAfterCursor = _buffer.GetTextAfterCursor();
+            widthAfterCursor = _buffer.GetDisplayWidthAfterCursor();
+        }
+
+        if (!_buffer.TryBackspace(out var width))
+        {
+            return;
+        }
+
+        if (width <= 0)
+        {
+            width = 1;
+        }
+
+        if (isMiddleDeletion && !string.IsNullOrEmpty(textAfterCursor))
+        {
+            // Move cursor back by the width of deleted character
+            for (int i = 0; i < width; i++)
+            {
+                Console.Write('\b');
+            }
+            // Write the text that was after the cursor
+            Console.Write(textAfterCursor);
+            // Write spaces to clear any leftover characters
+            for (int i = 0; i < width; i++)
+            {
+                Console.Write(' ');
+            }
+            // Move cursor back to the correct position
+            for (int i = 0; i < widthAfterCursor + width; i++)
+            {
+                Console.Write('\b');
+            }
+        }
+        else
+        {
+            // Standard backspace at end of line
+            var sequence = EraseSequences.ForWidth(width);
+            Console.Write(sequence);
+        }
+    }
+
+    private void HandleDelete()
+    {
+        var textAfterCursor = _buffer.GetTextAfterCursor();
+        var widthAfterCursor = _buffer.GetDisplayWidthAfterCursor();
+
+        if (!_buffer.TryDelete(out var width))
+        {
+            return;
+        }
+
+        // Rewrite text after cursor
+        if (!string.IsNullOrEmpty(textAfterCursor))
+        {
+            // Skip the first grapheme cluster (the one we deleted)
+            var remainingText = textAfterCursor;
+            var remainingStart = 0;
+            var enumerator = StringInfo.GetTextElementEnumerator(textAfterCursor);
+            if (enumerator.MoveNext())
+            {
+                remainingStart = enumerator.ElementIndex + ((string)enumerator.Current).Length;
+                if (remainingStart < textAfterCursor.Length)
+                {
+                    remainingText = textAfterCursor.Substring(remainingStart);
+                }
+                else
+                {
+                    remainingText = string.Empty;
+                }
+            }
+
+            Console.Write(remainingText);
+            // Clear leftover characters
+            for (int i = 0; i < width; i++)
+            {
+                Console.Write(' ');
+            }
+            // Move cursor back
+            for (int i = 0; i < widthAfterCursor; i++)
+            {
+                Console.Write('\b');
+            }
+        }
+    }
+
+    private void HandleLeftArrow()
+    {
+        if (_buffer.MoveCursorLeft(out var width))
+        {
+            for (int i = 0; i < width; i++)
+            {
+                Console.Write('\b');
+            }
+        }
+    }
+
+    private void HandleRightArrow()
+    {
+        var textAfterCursor = _buffer.GetTextAfterCursor();
+        if (_buffer.MoveCursorRight(out var width) && !string.IsNullOrEmpty(textAfterCursor))
+        {
+            // Move cursor forward by reading the actual character(s)
+            var enumerator = StringInfo.GetTextElementEnumerator(textAfterCursor);
+            if (enumerator.MoveNext())
+            {
+                Console.Write((string)enumerator.Current);
+            }
+        }
+    }
+
+    private void HandleHome()
+    {
+        var totalWidth = 0;
+        while (_buffer.MoveCursorLeft(out var width))
+        {
+            totalWidth += width;
+        }
+
+        if (totalWidth > 0)
+        {
+            for (int i = 0; i < totalWidth; i++)
+            {
+                Console.Write('\b');
+            }
+        }
+    }
+
+    private void HandleEnd()
+    {
+        var text = _buffer.GetTextAfterCursor();
+        if (!string.IsNullOrEmpty(text))
+        {
+            Console.Write(text);
+            while (_buffer.MoveCursorRight(out _))
+            {
+                // Just moving the buffer cursor, console cursor already at end
+            }
         }
     }
 }
