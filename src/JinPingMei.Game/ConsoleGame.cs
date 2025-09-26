@@ -18,6 +18,10 @@ public sealed class ConsoleGame
     private readonly GameSession _gameSession;
     private readonly ConsoleTerminal _terminal;
 
+    private bool _footerActive;
+    private int _footerTop;
+    private int _footerLinesWritten;
+
     public ConsoleGame(
         ILogger<ConsoleGame>? logger = null,
         IGameSessionFactory? sessionFactory = null)
@@ -70,13 +74,19 @@ public sealed class ConsoleGame
 
     private async Task RunGameLoopAsync(CancellationToken cancellationToken)
     {
+        var isFirstPrompt = true;
+        var needsPromptSpacing = false;
+
         while (!cancellationToken.IsCancellationRequested)
         {
-            // Display prompt
-            await _terminal.WriteAsync("> ", cancellationToken);
+            await RenderPromptAsync(cancellationToken, isFirstPrompt, needsPromptSpacing);
+            isFirstPrompt = false;
+            needsPromptSpacing = false;
 
-            // Read user input
+            // Read user input after drawing prompt and footer
             var input = await _terminal.ReadLineAsync(cancellationToken);
+
+            ClearFooterAreaIfNeeded();
 
             if (input is null)
             {
@@ -114,11 +124,10 @@ public sealed class ConsoleGame
                 await _terminal.WriteLineAsync(responseLine, cancellationToken);
             }
 
-            // Add spacing after response
-            await _terminal.WriteLineAsync("", cancellationToken);
-
-            // Display footer after response (like CLI tools)
-            await DisplayFooterAsync(cancellationToken);
+            if (commandResult.Lines.Count > 0)
+            {
+                needsPromptSpacing = true;
+            }
 
             // Check if user wants to quit
             if (commandResult.ShouldDisconnect)
@@ -129,8 +138,26 @@ public sealed class ConsoleGame
         }
     }
 
+    private async Task RenderPromptAsync(
+        CancellationToken cancellationToken,
+        bool isFirstPrompt,
+        bool needsPromptSpacing)
+    {
+        if (!isFirstPrompt && needsPromptSpacing)
+        {
+            await _terminal.WriteLineAsync(string.Empty, cancellationToken);
+        }
 
-    private async Task DisplayFooterAsync(CancellationToken cancellationToken)
+        await _terminal.WriteAsync("> ", cancellationToken);
+
+        var keepCursorOnPrompt = !Console.IsInputRedirected && !Console.IsOutputRedirected;
+        await DisplayFooterAsync(cancellationToken, keepCursorOnPrompt);
+    }
+
+
+    private async Task DisplayFooterAsync(
+        CancellationToken cancellationToken,
+        bool keepCursorOnPrompt = false)
     {
         // Display footer in all modes, but make it subtle for piped output
 
@@ -143,19 +170,41 @@ public sealed class ConsoleGame
         var shortcuts = "Ctrl+C:退出 | /help:指令 | /quit:離線";
 
         // For interactive terminals, use a visual separator
-        if (!Console.IsInputRedirected && !Console.IsOutputRedirected)
+        var isInteractive = !Console.IsInputRedirected && !Console.IsOutputRedirected;
+
+        var promptLeft = 0;
+        var linesWritten = 0;
+
+        int footerTop;
+
+        if (keepCursorOnPrompt && isInteractive)
+        {
+            var promptTop = Console.CursorTop;
+            promptLeft = Console.CursorLeft;
+            await _terminal.WriteLineAsync(string.Empty, cancellationToken);
+            linesWritten++;
+            footerTop = promptTop + 1;
+        }
+        else
+        {
+            keepCursorOnPrompt = false;
+            footerTop = Console.CursorTop;
+        }
+
+        if (isInteractive)
         {
             // Draw separator line
             var width = Math.Min(Console.WindowWidth, 80); // Cap at 80 chars for readability
             var separator = new string('─', Math.Max(1, width));
             await _terminal.WriteLineAsync(separator, cancellationToken);
+            linesWritten++;
         }
 
         // Format footer line: Player | Location | Shortcuts
         var footerText = $"玩家: {playerName} | 位置: {locationName} | {shortcuts}";
 
         // For interactive terminals, truncate if needed
-        if (!Console.IsInputRedirected && !Console.IsOutputRedirected)
+        if (isInteractive)
         {
             var width = Console.WindowWidth;
             if (footerText.Length > width)
@@ -165,9 +214,99 @@ public sealed class ConsoleGame
         }
 
         await _terminal.WriteLineAsync(footerText, cancellationToken);
+        linesWritten++;
 
-        // Add a blank line for spacing
-        await _terminal.WriteLineAsync("", cancellationToken);
+        if (!keepCursorOnPrompt)
+        {
+            // Add a blank line for spacing when we are not preserving prompt position
+            await _terminal.WriteLineAsync(string.Empty, cancellationToken);
+        }
+        else if (isInteractive)
+        {
+            var targetTop = Console.CursorTop - linesWritten;
+            if (targetTop < 0)
+            {
+                targetTop = 0;
+            }
+
+            try
+            {
+                Console.SetCursorPosition(promptLeft, targetTop);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // If the console buffer scrolled, fall back to the current line
+                Console.SetCursorPosition(Math.Max(0, promptLeft), Console.CursorTop);
+            }
+        }
+
+        if (keepCursorOnPrompt && isInteractive)
+        {
+            _footerActive = true;
+            _footerTop = footerTop;
+            _footerLinesWritten = linesWritten;
+        }
+        else
+        {
+            _footerActive = false;
+            _footerLinesWritten = 0;
+        }
+    }
+
+    private void ClearFooterAreaIfNeeded()
+    {
+        if (!_footerActive)
+        {
+            return;
+        }
+
+        var isInteractive = !Console.IsInputRedirected && !Console.IsOutputRedirected;
+        if (!isInteractive)
+        {
+            _footerActive = false;
+            _footerLinesWritten = 0;
+            return;
+        }
+
+        var width = Math.Max(1, Console.WindowWidth);
+
+        var currentLeft = Console.CursorLeft;
+        var currentTop = Console.CursorTop;
+
+        for (var i = 0; i < _footerLinesWritten; i++)
+        {
+            var lineTop = _footerTop + i;
+
+            if (lineTop >= Console.BufferHeight)
+            {
+                break;
+            }
+
+            try
+            {
+                Console.SetCursorPosition(0, lineTop);
+                Console.Write(new string(' ', width));
+                Console.SetCursorPosition(0, lineTop);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                break;
+            }
+        }
+
+        try
+        {
+            Console.SetCursorPosition(currentLeft, currentTop);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            var safeTop = Math.Min(currentTop, Math.Max(0, Console.BufferHeight - 1));
+            var safeLeft = Math.Max(0, Math.Min(currentLeft, Math.Max(0, width - 1)));
+            Console.SetCursorPosition(safeLeft, safeTop);
+        }
+
+        _footerActive = false;
+        _footerLinesWritten = 0;
     }
 
 }
