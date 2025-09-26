@@ -31,6 +31,21 @@ public sealed class GameSession
 
     public SessionState State => _state;
 
+    public string GetCurrentLocationDisplayName()
+    {
+        return $"{_world.CurrentLocale.Name} › {_world.CurrentScene.Name}";
+    }
+
+    public string GetCurrentLocationName()
+    {
+        return _world.CurrentScene.Name;
+    }
+
+    public string GetCurrentLocaleName()
+    {
+        return _world.CurrentLocale.Name;
+    }
+
     public string RenderIntro()
     {
         return _runtime.RenderIntro();
