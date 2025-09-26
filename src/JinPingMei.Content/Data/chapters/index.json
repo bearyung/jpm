@@ -1,0 +1,902 @@
+[
+  {
+    "Id": "chapter-001",
+    "Number": 1,
+    "Titles": [
+      "景陽岡武松打虎",
+      "潘金蓮嫌夫賣風月"
+    ],
+    "FileName": "chapter-001.json"
+  },
+  {
+    "Id": "chapter-002",
+    "Number": 2,
+    "Titles": [
+      "西門慶簾下遇金蓮",
+      "王婆子貪賄說風情"
+    ],
+    "FileName": "chapter-002.json"
+  },
+  {
+    "Id": "chapter-003",
+    "Number": 3,
+    "Titles": [
+      "王婆定十件挨光計",
+      "西門慶茶房戲金蓮"
+    ],
+    "FileName": "chapter-003.json"
+  },
+  {
+    "Id": "chapter-004",
+    "Number": 4,
+    "Titles": [
+      "淫婦背武大偷奸",
+      "鄆哥不憤鬧茶肆"
+    ],
+    "FileName": "chapter-004.json"
+  },
+  {
+    "Id": "chapter-005",
+    "Number": 5,
+    "Titles": [
+      "鄆哥幫捉罵王婆",
+      "淫婦藥酖武大郎"
+    ],
+    "FileName": "chapter-005.json"
+  },
+  {
+    "Id": "chapter-006",
+    "Number": 6,
+    "Titles": [
+      "西門慶買囑何九",
+      "王婆打酒遇大雨"
+    ],
+    "FileName": "chapter-006.json"
+  },
+  {
+    "Id": "chapter-007",
+    "Number": 7,
+    "Titles": [
+      "薛婆兒說娶孟玉樓",
+      "楊姑娘氣罵張四舅"
+    ],
+    "FileName": "chapter-007.json"
+  },
+  {
+    "Id": "chapter-008",
+    "Number": 8,
+    "Titles": [
+      "潘金蓮永夜盼西門慶",
+      "燒夫靈和尚聽淫聲"
+    ],
+    "FileName": "chapter-008.json"
+  },
+  {
+    "Id": "chapter-009",
+    "Number": 9,
+    "Titles": [
+      "西門慶計娶潘金蓮",
+      "武都頭誤打李外傳"
+    ],
+    "FileName": "chapter-009.json"
+  },
+  {
+    "Id": "chapter-010",
+    "Number": 10,
+    "Titles": [
+      "武二充配孟州道",
+      "妻妾宴賞芙蓉亭"
+    ],
+    "FileName": "chapter-010.json"
+  },
+  {
+    "Id": "chapter-011",
+    "Number": 11,
+    "Titles": [
+      "潘金蓮激打孫雪娥",
+      "西門慶梳籠李桂姐"
+    ],
+    "FileName": "chapter-011.json"
+  },
+  {
+    "Id": "chapter-012",
+    "Number": 12,
+    "Titles": [
+      "潘金蓮私僕受辱",
+      "劉理星魘勝貪財"
+    ],
+    "FileName": "chapter-012.json"
+  },
+  {
+    "Id": "chapter-013",
+    "Number": 13,
+    "Titles": [
+      "李瓶兒隔牆密約",
+      "迎春女窺隙偷光"
+    ],
+    "FileName": "chapter-013.json"
+  },
+  {
+    "Id": "chapter-014",
+    "Number": 14,
+    "Titles": [
+      "花子虛因氣喪身",
+      "李瓶兒送奸赴會"
+    ],
+    "FileName": "chapter-014.json"
+  },
+  {
+    "Id": "chapter-015",
+    "Number": 15,
+    "Titles": [
+      "佳人笑賞翫燈樓",
+      "狎客幫嫖麗春院"
+    ],
+    "FileName": "chapter-015.json"
+  },
+  {
+    "Id": "chapter-016",
+    "Number": 16,
+    "Titles": [
+      "西門慶謀財娶婦",
+      "應伯爵慶喜追歡"
+    ],
+    "FileName": "chapter-016.json"
+  },
+  {
+    "Id": "chapter-017",
+    "Number": 17,
+    "Titles": [
+      "宇給事劾倒楊提督",
+      "李瓶兒招贅蔣竹山"
+    ],
+    "FileName": "chapter-017.json"
+  },
+  {
+    "Id": "chapter-018",
+    "Number": 18,
+    "Titles": [
+      "來保上東京幹事",
+      "陳經濟花園管工"
+    ],
+    "FileName": "chapter-018.json"
+  },
+  {
+    "Id": "chapter-019",
+    "Number": 19,
+    "Titles": [
+      "草裏蛇邏打蔣竹山",
+      "李瓶兒情感西門慶"
+    ],
+    "FileName": "chapter-019.json"
+  },
+  {
+    "Id": "chapter-020",
+    "Number": 20,
+    "Titles": [
+      "孟玉樓義勸吳月娘",
+      "西門慶大鬧麗春院"
+    ],
+    "FileName": "chapter-020.json"
+  },
+  {
+    "Id": "chapter-021",
+    "Number": 21,
+    "Titles": [
+      "吳月娘掃雪烹茶",
+      "應伯爵替花勾使"
+    ],
+    "FileName": "chapter-021.json"
+  },
+  {
+    "Id": "chapter-022",
+    "Number": 22,
+    "Titles": [
+      "西門慶私淫來旺婦",
+      "春梅正色罵李銘"
+    ],
+    "FileName": "chapter-022.json"
+  },
+  {
+    "Id": "chapter-023",
+    "Number": 23,
+    "Titles": [
+      "玉簫觀風賽月房",
+      "金蓮竊聽藏春塢"
+    ],
+    "FileName": "chapter-023.json"
+  },
+  {
+    "Id": "chapter-024",
+    "Number": 24,
+    "Titles": [
+      "陳經濟元夜戲嬌姿",
+      "惠祥怒詈來旺婦"
+    ],
+    "FileName": "chapter-024.json"
+  },
+  {
+    "Id": "chapter-025",
+    "Number": 25,
+    "Titles": [
+      "雪娥透露蝶蜂情",
+      "來旺醉謗西門慶"
+    ],
+    "FileName": "chapter-025.json"
+  },
+  {
+    "Id": "chapter-026",
+    "Number": 26,
+    "Titles": [
+      "來旺兒遞解徐州",
+      "宋惠連含羞自縊"
+    ],
+    "FileName": "chapter-026.json"
+  },
+  {
+    "Id": "chapter-027",
+    "Number": 27,
+    "Titles": [
+      "李瓶兒私語翡翠軒",
+      "潘金蓮醉鬧葡萄架"
+    ],
+    "FileName": "chapter-027.json"
+  },
+  {
+    "Id": "chapter-028",
+    "Number": 28,
+    "Titles": [
+      "陳經濟因鞋戲金蓮",
+      "西門慶怒打鐵棍兒"
+    ],
+    "FileName": "chapter-028.json"
+  },
+  {
+    "Id": "chapter-029",
+    "Number": 29,
+    "Titles": [
+      "吳神仙貴賤相人",
+      "潘金蓮蘭湯午戰"
+    ],
+    "FileName": "chapter-029.json"
+  },
+  {
+    "Id": "chapter-030",
+    "Number": 30,
+    "Titles": [
+      "來保押送生辰擔",
+      "西門慶生子喜加官"
+    ],
+    "FileName": "chapter-030.json"
+  },
+  {
+    "Id": "chapter-031",
+    "Number": 31,
+    "Titles": [
+      "琴童藏壺覷玉簫",
+      "西門慶開宴吃喜酒"
+    ],
+    "FileName": "chapter-031.json"
+  },
+  {
+    "Id": "chapter-032",
+    "Number": 32,
+    "Titles": [
+      "李桂姐拜娘認女",
+      "應伯爵打渾趨時"
+    ],
+    "FileName": "chapter-032.json"
+  },
+  {
+    "Id": "chapter-033",
+    "Number": 33,
+    "Titles": [
+      "陳經濟失鑰罰唱",
+      "韓道國縱婦爭鋒"
+    ],
+    "FileName": "chapter-033.json"
+  },
+  {
+    "Id": "chapter-034",
+    "Number": 34,
+    "Titles": [
+      "書僮兒因寵攬事",
+      "平安兒含恨戳舌"
+    ],
+    "FileName": "chapter-034.json"
+  },
+  {
+    "Id": "chapter-035",
+    "Number": 35,
+    "Titles": [
+      "西門慶挾恨責平安",
+      "書僮兒妝旦勸狎客"
+    ],
+    "FileName": "chapter-035.json"
+  },
+  {
+    "Id": "chapter-036",
+    "Number": 36,
+    "Titles": [
+      "翟謙寄書尋女子",
+      "西門慶結交蔡狀元"
+    ],
+    "FileName": "chapter-036.json"
+  },
+  {
+    "Id": "chapter-037",
+    "Number": 37,
+    "Titles": [
+      "馮媽媽說嫁韓氏女",
+      "西門慶包占王六兒"
+    ],
+    "FileName": "chapter-037.json"
+  },
+  {
+    "Id": "chapter-038",
+    "Number": 38,
+    "Titles": [
+      "西門慶夾打二搗鬼",
+      "潘金蓮雪夜弄琵琶"
+    ],
+    "FileName": "chapter-038.json"
+  },
+  {
+    "Id": "chapter-039",
+    "Number": 39,
+    "Titles": [
+      "西門慶玉皇廟打醮",
+      "吳月娘聽尼僧說經"
+    ],
+    "FileName": "chapter-039.json"
+  },
+  {
+    "Id": "chapter-040",
+    "Number": 40,
+    "Titles": [
+      "抱孩童瓶兒希寵",
+      "妝丫鬟金蓮市愛"
+    ],
+    "FileName": "chapter-040.json"
+  },
+  {
+    "Id": "chapter-041",
+    "Number": 41,
+    "Titles": [
+      "西門慶與喬大戶結親",
+      "潘金蓮共李瓶兒鬭氣"
+    ],
+    "FileName": "chapter-041.json"
+  },
+  {
+    "Id": "chapter-042",
+    "Number": 42,
+    "Titles": [
+      "豪家攔門翫煙火",
+      "貴客高樓醉賞燈"
+    ],
+    "FileName": "chapter-042.json"
+  },
+  {
+    "Id": "chapter-043",
+    "Number": 43,
+    "Titles": [
+      "為失金西門慶罵金蓮",
+      "因結親月娘會喬太太"
+    ],
+    "FileName": "chapter-043.json"
+  },
+  {
+    "Id": "chapter-044",
+    "Number": 44,
+    "Titles": [
+      "吳月娘留宿李桂姐",
+      "西門慶醉拶夏花兒"
+    ],
+    "FileName": "chapter-044.json"
+  },
+  {
+    "Id": "chapter-045",
+    "Number": 45,
+    "Titles": [
+      "桂姐央留夏花兒",
+      "月娘含怒罵玳安"
+    ],
+    "FileName": "chapter-045.json"
+  },
+  {
+    "Id": "chapter-046",
+    "Number": 46,
+    "Titles": [
+      "元夜遊行遇雪雨",
+      "妻妾笑卜龜兒卦"
+    ],
+    "FileName": "chapter-046.json"
+  },
+  {
+    "Id": "chapter-047",
+    "Number": 47,
+    "Titles": [
+      "王六兒說事圖財",
+      "西門慶受贓枉法"
+    ],
+    "FileName": "chapter-047.json"
+  },
+  {
+    "Id": "chapter-048",
+    "Number": 48,
+    "Titles": [
+      "曾御史參劾提刑官",
+      "蔡太師奏行七件事"
+    ],
+    "FileName": "chapter-048.json"
+  },
+  {
+    "Id": "chapter-049",
+    "Number": 49,
+    "Titles": [
+      "西門慶迎請宋巡按",
+      "永福寺餞行遇胡僧"
+    ],
+    "FileName": "chapter-049.json"
+  },
+  {
+    "Id": "chapter-050",
+    "Number": 50,
+    "Titles": [
+      "琴童潛聽燕鶯歡",
+      "玳安嬉游蝴蝶巷"
+    ],
+    "FileName": "chapter-050.json"
+  },
+  {
+    "Id": "chapter-051",
+    "Number": 51,
+    "Titles": [
+      "月娘聽演金剛科",
+      "桂姐躲在西門宅"
+    ],
+    "FileName": "chapter-051.json"
+  },
+  {
+    "Id": "chapter-052",
+    "Number": 52,
+    "Titles": [
+      "應伯爵山洞戲春嬌",
+      "潘金蓮花園看蘑菇"
+    ],
+    "FileName": "chapter-052.json"
+  },
+  {
+    "Id": "chapter-053",
+    "Number": 53,
+    "Titles": [
+      "吳月娘承歡求子息",
+      "李瓶兒酬願保兒童"
+    ],
+    "FileName": "chapter-053.json"
+  },
+  {
+    "Id": "chapter-054",
+    "Number": 54,
+    "Titles": [
+      "應伯爵郊園會諸友",
+      "任醫官豪家看病症"
+    ],
+    "FileName": "chapter-054.json"
+  },
+  {
+    "Id": "chapter-055",
+    "Number": 55,
+    "Titles": [
+      "西門慶東京慶壽旦",
+      "苗員外揚州送歌童"
+    ],
+    "FileName": "chapter-055.json"
+  },
+  {
+    "Id": "chapter-056",
+    "Number": 56,
+    "Titles": [
+      "西門慶周濟常時節",
+      "應伯爵舉薦水秀才"
+    ],
+    "FileName": "chapter-056.json"
+  },
+  {
+    "Id": "chapter-057",
+    "Number": 57,
+    "Titles": [
+      "道長老募修永福寺",
+      "薛姑子勸捨陀羅經"
+    ],
+    "FileName": "chapter-057.json"
+  },
+  {
+    "Id": "chapter-058",
+    "Number": 58,
+    "Titles": [
+      "懷妒忌金蓮打秋菊",
+      "乞臘肉磨鏡叟訴冤"
+    ],
+    "FileName": "chapter-058.json"
+  },
+  {
+    "Id": "chapter-059",
+    "Number": 59,
+    "Titles": [
+      "西門慶摔死雪獅子",
+      "李瓶兒痛哭官哥兒"
+    ],
+    "FileName": "chapter-059.json"
+  },
+  {
+    "Id": "chapter-060",
+    "Number": 60,
+    "Titles": [
+      "李瓶兒因暗氣惹病",
+      "西門慶立緞鋪開張"
+    ],
+    "FileName": "chapter-060.json"
+  },
+  {
+    "Id": "chapter-061",
+    "Number": 61,
+    "Titles": [
+      "韓道國筵請西門慶",
+      "李瓶兒苦痛宴重陽"
+    ],
+    "FileName": "chapter-061.json"
+  },
+  {
+    "Id": "chapter-062",
+    "Number": 62,
+    "Titles": [
+      "潘道士解禳祭燈壇",
+      "西門慶大哭李瓶兒"
+    ],
+    "FileName": "chapter-062.json"
+  },
+  {
+    "Id": "chapter-063",
+    "Number": 63,
+    "Titles": [
+      "親朋祭奠開筵宴",
+      "西門慶觀戲感李瓶"
+    ],
+    "FileName": "chapter-063.json"
+  },
+  {
+    "Id": "chapter-064",
+    "Number": 64,
+    "Titles": [
+      "玉簫跪央潘金蓮",
+      "合衛官祭富室娘"
+    ],
+    "FileName": "chapter-064.json"
+  },
+  {
+    "Id": "chapter-065",
+    "Number": 65,
+    "Titles": [
+      "吳道官迎殯頒眞容",
+      "宋御史結豪請六黃"
+    ],
+    "FileName": "chapter-065.json"
+  },
+  {
+    "Id": "chapter-066",
+    "Number": 66,
+    "Titles": [
+      "翟管家寄書致賻",
+      "黃眞人煉度薦亡"
+    ],
+    "FileName": "chapter-066.json"
+  },
+  {
+    "Id": "chapter-067",
+    "Number": 67,
+    "Titles": [
+      "西門慶書房賞雪",
+      "李瓶兒夢訴幽情"
+    ],
+    "FileName": "chapter-067.json"
+  },
+  {
+    "Id": "chapter-068",
+    "Number": 68,
+    "Titles": [
+      "鄭月兒賣俏透密意",
+      "玳安慇勤尋文嫂"
+    ],
+    "FileName": "chapter-068.json"
+  },
+  {
+    "Id": "chapter-069",
+    "Number": 69,
+    "Titles": [
+      "文嫂通情林太太",
+      "王三官中詐求奸"
+    ],
+    "FileName": "chapter-069.json"
+  },
+  {
+    "Id": "chapter-070",
+    "Number": 70,
+    "Titles": [
+      "西門慶工完陞級",
+      "羣僚庭參朱太尉"
+    ],
+    "FileName": "chapter-070.json"
+  },
+  {
+    "Id": "chapter-071",
+    "Number": 71,
+    "Titles": [
+      "李瓶兒何千戶家托夢",
+      "提刑官引奏朝儀"
+    ],
+    "FileName": "chapter-071.json"
+  },
+  {
+    "Id": "chapter-072",
+    "Number": 72,
+    "Titles": [
+      "王三官拜西門為義父",
+      "應伯爵替李銘釋冤"
+    ],
+    "FileName": "chapter-072.json"
+  },
+  {
+    "Id": "chapter-073",
+    "Number": 73,
+    "Titles": [
+      "潘金蓮不憤憶吹簫",
+      "郁大姐夜唱鬧五更"
+    ],
+    "FileName": "chapter-073.json"
+  },
+  {
+    "Id": "chapter-074",
+    "Number": 74,
+    "Titles": [
+      "宋御史索求八仙鼎",
+      "吳月娘聽宣黃氏卷"
+    ],
+    "FileName": "chapter-074.json"
+  },
+  {
+    "Id": "chapter-075",
+    "Number": 75,
+    "Titles": [
+      "春梅毀罵申二姐",
+      "玉簫愬言潘金蓮"
+    ],
+    "FileName": "chapter-075.json"
+  },
+  {
+    "Id": "chapter-076",
+    "Number": 76,
+    "Titles": [
+      "孟玉樓解慍吳月娘",
+      "西門慶斥逐溫葵軒"
+    ],
+    "FileName": "chapter-076.json"
+  },
+  {
+    "Id": "chapter-077",
+    "Number": 77,
+    "Titles": [
+      "西門慶踏雪訪愛月",
+      "賁四嫂倚牖盼佳期"
+    ],
+    "FileName": "chapter-077.json"
+  },
+  {
+    "Id": "chapter-078",
+    "Number": 78,
+    "Titles": [
+      "西門慶兩戰林太太",
+      "吳月娘翫燈請藍氏"
+    ],
+    "FileName": "chapter-078.json"
+  },
+  {
+    "Id": "chapter-079",
+    "Number": 79,
+    "Titles": [
+      "西門慶貪慾得病",
+      "吳月娘墓生產子"
+    ],
+    "FileName": "chapter-079.json"
+  },
+  {
+    "Id": "chapter-080",
+    "Number": 80,
+    "Titles": [
+      "陳經濟竊玉偷香",
+      "李嬌兒盜財歸院"
+    ],
+    "FileName": "chapter-080.json"
+  },
+  {
+    "Id": "chapter-081",
+    "Number": 81,
+    "Titles": [
+      "韓道國拐財倚勢",
+      "湯來保欺主背恩"
+    ],
+    "FileName": "chapter-081.json"
+  },
+  {
+    "Id": "chapter-082",
+    "Number": 82,
+    "Titles": [
+      "潘金蓮月夜偷期",
+      "陳經濟畫樓雙羙"
+    ],
+    "FileName": "chapter-082.json"
+  },
+  {
+    "Id": "chapter-083",
+    "Number": 83,
+    "Titles": [
+      "秋菊含恨洩幽情",
+      "春梅寄柬諧佳會"
+    ],
+    "FileName": "chapter-083.json"
+  },
+  {
+    "Id": "chapter-084",
+    "Number": 84,
+    "Titles": [
+      "吳月娘大鬧碧霞宮",
+      "宋公明義釋清風寨"
+    ],
+    "FileName": "chapter-084.json"
+  },
+  {
+    "Id": "chapter-085",
+    "Number": 85,
+    "Titles": [
+      "月娘識破金蓮姦情",
+      "薛嫂月夜賣春梅"
+    ],
+    "FileName": "chapter-085.json"
+  },
+  {
+    "Id": "chapter-086",
+    "Number": 86,
+    "Titles": [
+      "雪娥唆打陳經濟",
+      "王婆售利嫁金蓮"
+    ],
+    "FileName": "chapter-086.json"
+  },
+  {
+    "Id": "chapter-087",
+    "Number": 87,
+    "Titles": [
+      "王婆子貪財受報",
+      "武都頭殺嫂祭兄"
+    ],
+    "FileName": "chapter-087.json"
+  },
+  {
+    "Id": "chapter-088",
+    "Number": 88,
+    "Titles": [
+      "潘金蓮托夢守禦府",
+      "吳月娘佈施募緣僧"
+    ],
+    "FileName": "chapter-088.json"
+  },
+  {
+    "Id": "chapter-089",
+    "Number": 89,
+    "Titles": [
+      "清明節寡婦上新墳",
+      "吳月娘誤入永福寺"
+    ],
+    "FileName": "chapter-089.json"
+  },
+  {
+    "Id": "chapter-090",
+    "Number": 90,
+    "Titles": [
+      "來旺盜拐孫雪娥",
+      "雪娥官賣守備府"
+    ],
+    "FileName": "chapter-090.json"
+  },
+  {
+    "Id": "chapter-091",
+    "Number": 91,
+    "Titles": [
+      "孟玉樓愛嫁李衙內",
+      "李衙內怒打玉簪兒"
+    ],
+    "FileName": "chapter-091.json"
+  },
+  {
+    "Id": "chapter-092",
+    "Number": 92,
+    "Titles": [
+      "陳經濟被陷嚴州府",
+      "吳月娘大鬧授官廳"
+    ],
+    "FileName": "chapter-092.json"
+  },
+  {
+    "Id": "chapter-093",
+    "Number": 93,
+    "Titles": [
+      "王杏庵仗義賙貧",
+      "任道士因財惹禍"
+    ],
+    "FileName": "chapter-093.json"
+  },
+  {
+    "Id": "chapter-094",
+    "Number": 94,
+    "Titles": [
+      "劉二醉毆陳經濟",
+      "洒家店雪娥為娼"
+    ],
+    "FileName": "chapter-094.json"
+  },
+  {
+    "Id": "chapter-095",
+    "Number": 95,
+    "Titles": [
+      "平安偷盜假當物",
+      "薛嫂喬計說人情"
+    ],
+    "FileName": "chapter-095.json"
+  },
+  {
+    "Id": "chapter-096",
+    "Number": 96,
+    "Titles": [
+      "春梅遊玩舊家池館",
+      "守備使張勝尋經濟"
+    ],
+    "FileName": "chapter-096.json"
+  },
+  {
+    "Id": "chapter-097",
+    "Number": 97,
+    "Titles": [
+      "經濟守禦府用事",
+      "薛嫂賣花說姻親"
+    ],
+    "FileName": "chapter-097.json"
+  },
+  {
+    "Id": "chapter-098",
+    "Number": 98,
+    "Titles": [
+      "陳經濟臨清開大店",
+      "韓愛姐翠館遇情郎"
+    ],
+    "FileName": "chapter-098.json"
+  },
+  {
+    "Id": "chapter-099",
+    "Number": 99,
+    "Titles": [
+      "劉二醉罵王六兒",
+      "張勝忿殺陳經濟"
+    ],
+    "FileName": "chapter-099.json"
+  },
+  {
+    "Id": "chapter-100",
+    "Number": 100,
+    "Titles": [
+      "韓愛姐湖州尋父",
+      "普靜師薦拔羣冤"
+    ],
+    "FileName": "chapter-100.json"
+  }
+]

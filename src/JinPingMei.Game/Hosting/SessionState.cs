@@ -1,5 +1,3 @@
-using JinPingMei.Content.Story;
-
 namespace JinPingMei.Game.Hosting;
 
 public sealed class SessionState
@@ -14,13 +12,7 @@ public sealed class SessionState
 
     public string? CurrentSceneId { get; set; }
 
-    public string? CurrentVolumeId { get; set; }
+    public string? StoryHostId { get; set; }
 
-    public string? CurrentEpisodeId { get; set; }
-
-    public CharacterDefinition? CurrentCharacter { get; set; }
-
-    public bool IsInCharacterSelection { get; set; }
-
-    public bool IsCharacterLocked => CurrentCharacter != null && CurrentEpisodeId != null;
+    public bool HasStoryHost => !string.IsNullOrWhiteSpace(StoryHostId);
 }

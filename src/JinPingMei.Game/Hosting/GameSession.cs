@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JinPingMei.Content.Story;
 using JinPingMei.Engine;
-using JinPingMei.Engine.Story;
 using JinPingMei.Engine.World;
 using JinPingMei.Game.Hosting.Commands;
 using JinPingMei.Game.Localization;
@@ -18,41 +16,24 @@ public sealed class GameSession
     private readonly CommandRouter _commandRouter;
     private readonly CommandContext _commandContext;
     private readonly WorldSession _world;
-    private readonly StoryProgressTracker _storyTracker;
-    private readonly CharacterSelectionHandler _characterSelectionHandler;
+    private readonly JinPingMei.Engine.Story.StorySession _story;
 
     public GameSession(GameRuntime runtime, ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics, IEnumerable<ICommandHandler>? additionalHandlers = null)
     {
         _runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _ = diagnostics ?? throw new ArgumentNullException(nameof(diagnostics));
+
         _state = new SessionState { Locale = localization.DefaultLocale };
         _world = runtime.CreateWorldSession();
-        _storyTracker = runtime.GetStoryTracker();
-        _characterSelectionHandler = new CharacterSelectionHandler(localization, _state.Locale);
         _state.CurrentLocaleId = _world.CurrentLocale.Id;
         _state.CurrentSceneId = _world.CurrentScene.Id;
-        _commandRouter = CommandRouter.CreateDefault(localization, diagnostics, additionalHandlers);
-        _commandContext = new CommandContext(_state, _world, localization, diagnostics);
 
-        InitializeFirstEpisode();
-    }
+        _story = runtime.CreateStorySession("volume-01");
 
-    private void InitializeFirstEpisode()
-    {
-        var firstEpisode = _storyTracker.GetNextEpisode();
-        if (firstEpisode != null)
-        {
-            // For now, we'll use a simple approach with the first volume
-            var volumeId = "volume1"; // Default first volume
-
-            if (_storyTracker.TryStartNewEpisode(volumeId, firstEpisode.Id, out _))
-            {
-                _state.CurrentVolumeId = volumeId;
-                _state.CurrentEpisodeId = firstEpisode.Id;
-                _state.IsInCharacterSelection = true;
-            }
-        }
+        var handlers = BuildStoryCommandHandlers(diagnostics, additionalHandlers);
+        _commandRouter = CommandRouter.CreateDefault(localization, diagnostics, handlers);
+        _commandContext = new CommandContext(_state, _world, _story, localization, diagnostics);
     }
 
     public SessionState State => _state;
@@ -74,16 +55,7 @@ public sealed class GameSession
 
     public string RenderIntro()
     {
-        var intro = _runtime.RenderIntro();
-
-        if (_state.IsInCharacterSelection && _storyTracker.CurrentEpisode != null && _storyTracker.CurrentVolume != null)
-        {
-            intro += "\n" + _characterSelectionHandler.RenderCharacterSelectionPrompt(
-                _storyTracker.CurrentEpisode,
-                _storyTracker.CurrentVolume);
-        }
-
-        return intro;
+        return _runtime.RenderIntro();
     }
 
     public string GetCommandHint()
@@ -112,148 +84,48 @@ public sealed class GameSession
     {
         if (string.IsNullOrWhiteSpace(input))
         {
-            return CommandResult.FromMessage(_commandContext.Localize("story.empty"));
-        }
-
-        if (_state.IsInCharacterSelection)
-        {
-            return HandleCharacterSelection(input);
+            return HandleStoryInteraction();
         }
 
         if (IsCommand(input))
         {
             var commandBody = input[1..];
-            var result = _commandRouter.Dispatch(commandBody, _commandContext);
-
-            CheckForEpisodeCompletion();
-
-            return result;
+            return _commandRouter.Dispatch(commandBody, _commandContext);
         }
 
-        return HandleStoryInteraction(input);
+        return HandleStoryInteraction();
     }
 
-    private CommandResult HandleCharacterSelection(string input)
+    private CommandResult HandleStoryInteraction()
     {
-        if (_storyTracker.CurrentEpisode == null)
+        if (!_state.HasStoryHost)
         {
-            _state.IsInCharacterSelection = false;
-            return CommandResult.FromMessage("Error: No episode available for character selection.");
+            return CommandResult.FromMessage("請先使用 /host <角色名稱> 選擇宿主。\n");
         }
 
-        var selectionResult = _characterSelectionHandler.ParseCharacterSelection(input, _storyTracker.CurrentEpisode);
-
-        if (!selectionResult.IsValid)
+        var result = _story.Advance();
+        if (result.Messages.Count == 0)
         {
-            return CommandResult.FromMessage(selectionResult.ErrorMessage ?? "Invalid selection.");
+            return CommandResult.Empty;
         }
 
-        CharacterDefinition? selectedCharacter = null;
-
-        if (selectionResult.IsRandom)
-        {
-            selectedCharacter = _storyTracker.SelectRandomCharacter();
-            if (selectedCharacter == null)
-            {
-                return CommandResult.FromMessage("Failed to select random character.");
-            }
-        }
-        else if (selectionResult.SelectedCharacter != null)
-        {
-            if (_storyTracker.TrySelectCharacter(selectionResult.SelectedCharacter.Id))
-            {
-                selectedCharacter = selectionResult.SelectedCharacter;
-            }
-            else
-            {
-                return CommandResult.FromMessage("Failed to select character.");
-            }
-        }
-
-        if (selectedCharacter != null)
-        {
-            _state.CurrentCharacter = selectedCharacter;
-            _state.IsInCharacterSelection = false;
-
-            if (!string.IsNullOrWhiteSpace(_storyTracker.CurrentEpisode.StartingSceneId))
-            {
-                MoveToScene(_storyTracker.CurrentEpisode.StartingSceneId, _storyTracker.CurrentEpisode.StartingLocaleId);
-            }
-
-            return CommandResult.FromMessage(
-                _characterSelectionHandler.RenderCharacterSelected(selectedCharacter, _storyTracker.CurrentEpisode));
-        }
-
-        return CommandResult.FromMessage("Failed to select character.");
+        return new CommandResult(result.Messages, result.StoryCompleted);
     }
 
-    private void MoveToScene(string sceneId, string? localeId)
+    private static IEnumerable<ICommandHandler> BuildStoryCommandHandlers(ITelnetServerDiagnostics diagnostics, IEnumerable<ICommandHandler>? additional)
     {
-        // This would need to be implemented in WorldSession to support direct scene navigation
-        // For now, we'll just update the state
-        _state.CurrentSceneId = sceneId;
-        if (!string.IsNullOrWhiteSpace(localeId))
+        var handlers = new List<ICommandHandler>
         {
-            _state.CurrentLocaleId = localeId;
-        }
-    }
+            new HostCommandHandler(),
+            new StoryStatusCommandHandler()
+        };
 
-    private void CheckForEpisodeCompletion()
-    {
-        if (_state.CurrentSceneId != null &&
-            _storyTracker.CurrentEpisode != null &&
-            _storyTracker.TryCompleteCurrentEpisode(_state.CurrentSceneId))
+        if (additional is not null)
         {
-            var nextEpisode = _storyTracker.GetNextEpisode();
-            if (nextEpisode != null)
-            {
-                // Prepare for next episode
-                _state.CurrentCharacter = null;
-                _state.IsInCharacterSelection = true;
-
-                // Find the volume for the next episode
-                var story = _runtime.GetStoryTracker();
-                foreach (var volume in story.CurrentVolume?.Episodes ?? new List<EpisodeDefinition>())
-                {
-                    if (volume.Id == nextEpisode.Id && story.TryStartNewEpisode(story.CurrentVolume!.Id, nextEpisode.Id, out _))
-                    {
-                        _state.CurrentEpisodeId = nextEpisode.Id;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    private CommandResult HandleStoryInteraction(string input)
-    {
-        var trimmed = input.Trim();
-        if (trimmed.Length == 0)
-        {
-            return CommandResult.FromMessage(_commandContext.Localize("story.empty"));
+            handlers.AddRange(additional);
         }
 
-        var displayName = GetCurrentDisplayName();
-        var response = _commandContext.Format("story.placeholder", displayName, trimmed);
-
-        CheckForEpisodeCompletion();
-
-        return CommandResult.FromMessage(response);
-    }
-
-    private string GetCurrentDisplayName()
-    {
-        if (_state.CurrentCharacter != null)
-        {
-            return _state.CurrentCharacter.Name;
-        }
-
-        if (_state.HasPlayerName)
-        {
-            return _state.PlayerName!;
-        }
-
-        return _commandContext.Localize("session.display_name.default");
+        return handlers;
     }
 
     private static bool IsCommand(string input)

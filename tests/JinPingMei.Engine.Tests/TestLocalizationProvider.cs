@@ -13,7 +13,7 @@ internal sealed class TestLocalizationProvider : ILocalizationProvider
         {
             ["commands.invalid"] = "請輸入要執行的指令，例如 /help。",
             ["commands.unknown"] = "無法識別這個指令。",
-            ["commands.help.summary"] = "目前可用指令：/help、/name <名字>、/look、/go <地點>、/examine <目標>、/say <內容>、/diagnostics、/health、/quit。",
+            ["commands.help.summary"] = "目前可用指令：/help、/host <角色>、/story、/name <名字>、/look、/go <地點>、/examine <目標>、/say <內容>、/diagnostics、/health、/quit。",
             ["commands.help.detail"] = "所有系統指令都以 / 開頭；其他內容則會交給故事互動。",
             ["commands.name.prompt"] = "請輸入 /name 後接您的名字。",
             ["commands.name.too_long"] = "名字最長 {0} 個字元。",

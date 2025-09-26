@@ -59,11 +59,12 @@ public class GameSessionTests
     {
         var session = CreateSession();
         session.HandleInput("/name 金蓮");
+        session.HandleInput("/host 武松");
 
         var result = session.HandleInput("我望向窗外的月色。");
 
-        Assert.Single(result.Lines);
-        Assert.Contains("金蓮", result.Lines.Single());
+        Assert.NotEmpty(result.Lines);
+        Assert.Contains(result.Lines, line => line.Contains("詞曲與亂世開場"));
     }
 
     [Fact]

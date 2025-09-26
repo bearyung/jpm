@@ -1,6 +1,6 @@
+using System.Linq;
 using JinPingMei.AI;
 using JinPingMei.Content;
-using JinPingMei.Engine.Story;
 using JinPingMei.Engine.World;
 
 namespace JinPingMei.Engine;
@@ -9,13 +9,13 @@ public sealed class GameRuntime
 {
     private readonly NarrativeDirector _director;
     private readonly WorldNavigator _worldNavigator;
-    private readonly StoryProgressTracker _storyTracker;
+    private readonly Story.StoryRepository _storyRepository;
 
-    private GameRuntime(NarrativeDirector director, WorldNavigator worldNavigator, StoryProgressTracker storyTracker)
+    private GameRuntime(NarrativeDirector director, WorldNavigator worldNavigator, Story.StoryRepository storyRepository)
     {
         _director = director;
         _worldNavigator = worldNavigator;
-        _storyTracker = storyTracker;
+        _storyRepository = storyRepository;
     }
 
     public static GameRuntime CreateDefault()
@@ -24,8 +24,8 @@ public sealed class GameRuntime
         var orchestrator = new AiOrchestrator();
         var director = new NarrativeDirector(orchestrator, lore);
         var worldNavigator = new WorldNavigator(lore.LoadWorldDefinition());
-        var storyTracker = new StoryProgressTracker(lore.LoadStoryDefinition());
-        return new GameRuntime(director, worldNavigator, storyTracker);
+        var storyRepository = new Story.StoryRepository();
+        return new GameRuntime(director, worldNavigator, storyRepository);
     }
 
     public string RenderIntro()
@@ -38,8 +38,13 @@ public sealed class GameRuntime
         return _worldNavigator.CreateSession();
     }
 
-    public StoryProgressTracker GetStoryTracker()
+    public Story.StorySession CreateStorySession(string volumeId)
     {
-        return _storyTracker;
+        var volume = _storyRepository.GetVolume(volumeId);
+        var chapters = volume.ChapterIds
+            .Select(id => _storyRepository.LoadChapter(id))
+            .ToList();
+
+        return new Story.StorySession(volume, chapters);
     }
 }
