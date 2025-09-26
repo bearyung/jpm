@@ -22,6 +22,21 @@ public sealed class ConsoleGame
     private int _footerTop;
     private int _footerLinesWritten;
 
+    private static readonly (int Start, int End)[] WideRanges =
+    {
+        (0x1100, 0x115F),
+        (0x2329, 0x232A),
+        (0x2E80, 0xA4CF),
+        (0xAC00, 0xD7A3),
+        (0xF900, 0xFAFF),
+        (0xFE10, 0xFE6F),
+        (0xFF00, 0xFF60),
+        (0xFFE0, 0xFFE6),
+        (0x1F300, 0x1F64F),
+        (0x1F900, 0x1F9FF),
+        (0x1FA70, 0x1FAFF)
+    };
+
     public ConsoleGame(
         ILogger<ConsoleGame>? logger = null,
         IGameSessionFactory? sessionFactory = null)
@@ -171,6 +186,7 @@ public sealed class ConsoleGame
 
         // For interactive terminals, use a visual separator
         var isInteractive = !Console.IsInputRedirected && !Console.IsOutputRedirected;
+        var windowWidth = isInteractive ? GetConsoleWindowWidth() : 80;
 
         var promptLeft = 0;
         var linesWritten = 0;
@@ -182,7 +198,7 @@ public sealed class ConsoleGame
             var promptTop = Console.CursorTop;
             promptLeft = Console.CursorLeft;
             await _terminal.WriteLineAsync(string.Empty, cancellationToken);
-            linesWritten++;
+            linesWritten += 1;
             footerTop = promptTop + 1;
         }
         else
@@ -194,10 +210,10 @@ public sealed class ConsoleGame
         if (isInteractive)
         {
             // Draw separator line
-            var width = Math.Min(Console.WindowWidth, 80); // Cap at 80 chars for readability
-            var separator = new string('─', Math.Max(1, width));
+            var separatorWidth = Math.Max(1, Math.Min(windowWidth, 80));
+            var separator = new string('─', separatorWidth);
             await _terminal.WriteLineAsync(separator, cancellationToken);
-            linesWritten++;
+            linesWritten += 1;
         }
 
         // Format footer line: Player | Location | Shortcuts
@@ -206,20 +222,17 @@ public sealed class ConsoleGame
         // For interactive terminals, truncate if needed
         if (isInteractive)
         {
-            var width = Console.WindowWidth;
-            if (footerText.Length > width)
-            {
-                footerText = footerText.Substring(0, Math.Max(1, width - 3)) + "...";
-            }
+            footerText = FitToConsoleWidth(footerText, windowWidth);
         }
 
         await _terminal.WriteLineAsync(footerText, cancellationToken);
-        linesWritten++;
+        linesWritten += GetConsoleLineCount(footerText, windowWidth);
 
         if (!keepCursorOnPrompt)
         {
             // Add a blank line for spacing when we are not preserving prompt position
             await _terminal.WriteLineAsync(string.Empty, cancellationToken);
+            linesWritten += 1;
         }
         else if (isInteractive)
         {
@@ -268,7 +281,7 @@ public sealed class ConsoleGame
             return;
         }
 
-        var width = Math.Max(1, Console.WindowWidth);
+        var width = GetConsoleBufferWidth();
 
         var currentLeft = Console.CursorLeft;
         var currentTop = Console.CursorTop;
@@ -307,6 +320,171 @@ public sealed class ConsoleGame
 
         _footerActive = false;
         _footerLinesWritten = 0;
+    }
+
+    private static int GetConsoleWindowWidth()
+    {
+        try
+        {
+            return Math.Max(1, Console.WindowWidth);
+        }
+        catch (Exception)
+        {
+            return 80;
+        }
+    }
+
+    private static int GetConsoleBufferWidth()
+    {
+        try
+        {
+            return Math.Max(1, Console.BufferWidth);
+        }
+        catch (Exception)
+        {
+            return 120;
+        }
+    }
+
+    private static string FitToConsoleWidth(string text, int maxWidth)
+    {
+        if (maxWidth <= 0)
+        {
+            return text;
+        }
+
+        var width = MeasureDisplayWidth(text);
+        if (width <= maxWidth)
+        {
+            return text;
+        }
+
+        const string ellipsis = "...";
+        var ellipsisWidth = MeasureDisplayWidth(ellipsis);
+        var availableWidth = Math.Max(0, maxWidth - ellipsisWidth);
+
+        if (availableWidth <= 0)
+        {
+            return TrimToDisplayWidth(ellipsis, maxWidth);
+        }
+
+        var trimmed = TrimToDisplayWidth(text, availableWidth);
+        return trimmed + ellipsis;
+    }
+
+    private static int GetConsoleLineCount(string text, int consoleWidth)
+    {
+        if (consoleWidth <= 0)
+        {
+            return 1;
+        }
+
+        var lines = 1;
+        var currentWidth = 0;
+
+        foreach (var rune in text.EnumerateRunes())
+        {
+            if (rune.Value == '\r')
+            {
+                continue;
+            }
+
+            if (rune.Value == '\n')
+            {
+                lines++;
+                currentWidth = 0;
+                continue;
+            }
+
+            var runeWidth = GetRuneDisplayWidth(rune);
+            if (runeWidth == 0)
+            {
+                continue;
+            }
+
+            if (currentWidth + runeWidth > consoleWidth)
+            {
+                lines++;
+                currentWidth = 0;
+            }
+
+            currentWidth += runeWidth;
+
+            if (currentWidth == consoleWidth)
+            {
+                currentWidth = 0;
+            }
+        }
+
+        return lines;
+    }
+
+    private static string TrimToDisplayWidth(string text, int maxWidth)
+    {
+        if (maxWidth <= 0)
+        {
+            return string.Empty;
+        }
+
+        var builder = new StringBuilder();
+        var widthUsed = 0;
+
+        foreach (var rune in text.EnumerateRunes())
+        {
+            var runeWidth = GetRuneDisplayWidth(rune);
+
+            if (widthUsed + runeWidth > maxWidth && runeWidth > 0)
+            {
+                break;
+            }
+
+            builder.Append(rune);
+            widthUsed += runeWidth;
+        }
+
+        return builder.ToString();
+    }
+
+    private static int MeasureDisplayWidth(string text)
+    {
+        var width = 0;
+        foreach (var rune in text.EnumerateRunes())
+        {
+            width += GetRuneDisplayWidth(rune);
+        }
+
+        return width;
+    }
+
+    private static int GetRuneDisplayWidth(Rune rune)
+    {
+        var category = Rune.GetUnicodeCategory(rune);
+        switch (category)
+        {
+            case UnicodeCategory.NonSpacingMark:
+            case UnicodeCategory.SpacingCombiningMark:
+            case UnicodeCategory.EnclosingMark:
+            case UnicodeCategory.Format:
+            case UnicodeCategory.Control:
+                return 0;
+        }
+
+        var value = rune.Value;
+
+        if (value is >= 0x1F3FB and <= 0x1F3FF)
+        {
+            return 0;
+        }
+
+        foreach (var (start, end) in WideRanges)
+        {
+            if (value >= start && value <= end)
+            {
+                return 2;
+            }
+        }
+
+        return 1;
     }
 
 }
