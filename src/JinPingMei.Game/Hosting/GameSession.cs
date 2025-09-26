@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JinPingMei.Engine;
 using JinPingMei.Engine.World;
 using JinPingMei.Game.Hosting.Commands;
@@ -56,6 +57,23 @@ public sealed class GameSession
         return _localization.GetString(_state.Locale, "session.commands.hint");
     }
 
+    public SceneSnapshot GetCurrentSceneSnapshot()
+    {
+        var locale = _world.CurrentLocale;
+        var scene = _world.CurrentScene;
+
+        var npcs = scene.Npcs.Select(npc => npc.Name).ToList();
+        var exits = scene.Exits.Select(exit => new SceneExitSnapshot(exit.DisplayName, exit.Description)).ToList();
+
+        return new SceneSnapshot(
+            locale.Name,
+            locale.Summary,
+            scene.Name,
+            scene.Description,
+            npcs,
+            exits);
+    }
+
     public CommandResult HandleInput(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -93,3 +111,13 @@ public sealed class GameSession
         return input.Length > 0 && input[0] == '/';
     }
 }
+
+public sealed record SceneSnapshot(
+    string LocaleName,
+    string LocaleSummary,
+    string SceneName,
+    string SceneDescription,
+    IReadOnlyList<string> NpcNames,
+    IReadOnlyList<SceneExitSnapshot> Exits);
+
+public sealed record SceneExitSnapshot(string DisplayName, string Description);

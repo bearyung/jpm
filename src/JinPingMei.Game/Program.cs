@@ -41,12 +41,8 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 var localizationProvider = new JsonLocalizationProvider(
     Path.Combine(AppContext.BaseDirectory, "Localization"));
 
-// Create game session factory (with a null diagnostics for console mode)
+// Create game session factory
 var sessionFactory = new GameSessionFactory(localizationProvider, new NullDiagnostics());
-
-var useTerminalGui = args.Any(static arg =>
-    string.Equals(arg, "--tui", StringComparison.OrdinalIgnoreCase) ||
-    string.Equals(arg, "--terminal-gui", StringComparison.OrdinalIgnoreCase));
 
 // Setup cancellation
 using var cts = new CancellationTokenSource();
@@ -59,51 +55,21 @@ Console.CancelKeyPress += (_, eventArgs) =>
 
 try
 {
-    if (useTerminalGui)
-    {
-        var tuiLogger = loggerFactory.CreateLogger<SpectreConsoleGame>();
-        var tuiGame = new SpectreConsoleGame(tuiLogger, sessionFactory);
-        await tuiGame.RunAsync(cts.Token);
-    }
-    else
-    {
-        var consoleLogger = loggerFactory.CreateLogger<ConsoleGame>();
-        var game = new ConsoleGame(consoleLogger, sessionFactory);
-
-        Console.Clear();
-        Console.WriteLine("====== 金瓶梅 JinPingMei - 互動敘事實驗 ======");
-        Console.WriteLine();
-
-        await game.RunAsync(cts.Token);
-
-        // Only wait for key press if we're in an interactive console
-        if (!Console.IsInputRedirected)
-        {
-            Console.WriteLine("\nPress any key to exit...");
-            Console.ReadKey(intercept: true);
-        }
-    }
+    var gameLogger = loggerFactory.CreateLogger<SpectreConsoleGame>();
+    var game = new SpectreConsoleGame(gameLogger, sessionFactory);
+    await game.RunAsync(cts.Token);
 }
 catch (OperationCanceledException)
 {
-    if (!useTerminalGui)
-    {
-        Console.WriteLine("\nGame interrupted by user.");
-    }
+    Console.WriteLine("\nGame interrupted by user.");
 }
 catch (Exception ex)
 {
-    if (!useTerminalGui)
+    loggerFactory.CreateLogger<Program>().LogError(ex, "Unhandled exception");
+    Console.WriteLine($"\nAn error occurred: {ex.Message}");
+    if (loggerFactory.CreateLogger<Program>().IsEnabled(LogLevel.Debug))
     {
-        Console.WriteLine($"\nAn error occurred: {ex.Message}");
-        if (loggerFactory.CreateLogger<Program>().IsEnabled(LogLevel.Debug))
-        {
-            Console.WriteLine(ex.StackTrace);
-        }
-    }
-    else
-    {
-        loggerFactory.CreateLogger<Program>().LogError(ex, "Unhandled exception in Terminal GUI mode");
+        Console.WriteLine(ex.StackTrace);
     }
 }
 

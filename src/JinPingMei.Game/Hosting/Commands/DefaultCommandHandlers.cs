@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using JinPingMei.Content.World;
 
 namespace JinPingMei.Game.Hosting.Commands;
@@ -11,10 +12,18 @@ public sealed class HelpCommandHandler : ICommandHandler
 
     public CommandResult Handle(CommandContext context, string arguments)
     {
-        var lines = new[]
+        // Quick reference - just the essential commands
+        var lines = new List<string>
         {
-            context.Localize("commands.help.summary"),
-            context.Localize("commands.help.detail")
+            "快速指令參考：",
+            "  /look (/l)     - 查看周圍環境",
+            "  /go <地點> (/g) - 前往地點",
+            "  /status (/s)   - 玩家狀態",
+            "  /map (/m)      - 地圖與出口",
+            "  /say <內容>    - 說話",
+            "  /quit (/q)     - 離開遊戲",
+            "",
+            "輸入 /commands 查看完整指令分類說明"
         };
 
         return new CommandResult(lines, false);
@@ -51,8 +60,8 @@ public sealed class LookCommandHandler : ICommandHandler
 
     public CommandResult Handle(CommandContext context, string arguments)
     {
-        var lines = WorldCommandFormatter.BuildLookLines(context);
-        return new CommandResult(lines, false);
+        // Return special marker for SpectreConsoleGame to render with Spectre.Console
+        return CommandResult.FromMessage("[LOOK_DISPLAY]");
     }
 }
 
@@ -126,6 +135,51 @@ public sealed class SayCommandHandler : ICommandHandler
             : context.Localize("session.display_name.default");
 
         return CommandResult.FromMessage(context.Format("commands.say.echo", displayName, arguments.Trim()));
+    }
+}
+
+public sealed class StatusCommandHandler : ICommandHandler
+{
+    public string Command => "status";
+
+    public CommandResult Handle(CommandContext context, string arguments)
+    {
+        // This handler now returns a special marker to indicate status should be displayed
+        // The actual rendering will be done by SpectreConsoleGame using Spectre.Console components
+        return CommandResult.FromMessage("[STATUS_DISPLAY]");
+    }
+}
+
+public sealed class MapCommandHandler : ICommandHandler
+{
+    public string Command => "map";
+
+    public CommandResult Handle(CommandContext context, string arguments)
+    {
+        // Return special marker for SpectreConsoleGame to render with Spectre.Console
+        return CommandResult.FromMessage("[MAP_DISPLAY]");
+    }
+}
+
+public sealed class InventoryCommandHandler : ICommandHandler
+{
+    public string Command => "inventory";
+
+    public CommandResult Handle(CommandContext context, string arguments)
+    {
+        // Return special marker for SpectreConsoleGame to render with Spectre.Console
+        return CommandResult.FromMessage("[INVENTORY_DISPLAY]");
+    }
+}
+
+public sealed class CommandsCommandHandler : ICommandHandler
+{
+    public string Command => "commands";
+
+    public CommandResult Handle(CommandContext context, string arguments)
+    {
+        // Return special marker for SpectreConsoleGame to render detailed command categories
+        return CommandResult.FromMessage("[COMMANDS_DISPLAY]");
     }
 }
 

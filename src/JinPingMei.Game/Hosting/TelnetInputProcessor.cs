@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.IO;
 using System.Text;
+using Rune = System.Text.Rune;
 using System.Threading;
 using System.Threading.Tasks;
 using JinPingMei.Game.Hosting.Text;
