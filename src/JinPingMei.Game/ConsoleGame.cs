@@ -72,9 +72,6 @@ public sealed class ConsoleGame
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            // Display footer before each prompt (like CLI tools)
-            await DisplayFooterAsync(cancellationToken);
-
             // Display prompt
             await _terminal.WriteAsync("> ", cancellationToken);
 
@@ -119,6 +116,9 @@ public sealed class ConsoleGame
 
             // Add spacing after response
             await _terminal.WriteLineAsync("", cancellationToken);
+
+            // Display footer after response (like CLI tools)
+            await DisplayFooterAsync(cancellationToken);
 
             // Check if user wants to quit
             if (commandResult.ShouldDisconnect)

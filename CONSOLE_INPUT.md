@@ -54,8 +54,6 @@ dotnet run --project src/JinPingMei.Game
 Example output flow:
 ```
 [previous content remains visible]
-────────────────────────────────────────────────
-玩家: 旅人 | 位置: 清河城 › 清河集市 | Ctrl+C:退出 | /help:指令 | /quit:離線
 
 > /help
 目前可用指令：/help、/name <名字>、/look...
@@ -65,6 +63,11 @@ Example output flow:
 
 > /look
 您身處於：清河集市...
+
+────────────────────────────────────────────────
+玩家: 旅人 | 位置: 清河城 › 清河集市 | Ctrl+C:退出 | /help:指令 | /quit:離線
+
+> _
 ```
 
 Test clean piped output:
