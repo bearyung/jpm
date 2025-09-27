@@ -96,12 +96,12 @@ public sealed class SpectreConsoleGame
             var location = _gameSession.GetCurrentLocationName();
             var promptText = $"[dim]{location}[/] [bold green]>[/] ";
 
-            // Use custom input handler for better Unicode/Chinese character handling and cursor movement
+            // Use custom input handler for better Unicode/Chinese character handling, cursor movement, and command history
             var input = await Task.Run(() =>
             {
                 try
                 {
-                    var inputHandler = new ConsoleInputHandler(promptText);
+                    var inputHandler = new ConsoleInputHandler(promptText, _commandHistory);
                     return inputHandler.ReadLine();
                 }
                 catch (OperationCanceledException)

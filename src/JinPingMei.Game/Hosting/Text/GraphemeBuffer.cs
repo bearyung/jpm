@@ -99,6 +99,34 @@ internal sealed class GraphemeBuffer
         _cursorPosition = _clusters.Count;
     }
 
+    public string GetTextBeforeCursor()
+    {
+        if (_cursorPosition == 0)
+        {
+            return string.Empty;
+        }
+
+        var beforeClusters = _clusters.Take(_cursorPosition).ToArray();
+        var totalLength = beforeClusters.Sum(c => c.Utf16Length);
+
+        if (totalLength == 0)
+        {
+            return string.Empty;
+        }
+
+        return string.Create(totalLength, beforeClusters, static (span, clusters) =>
+        {
+            var index = 0;
+            foreach (var cluster in clusters)
+            {
+                foreach (var rune in cluster.Runes)
+                {
+                    index += rune.EncodeToUtf16(span[index..]);
+                }
+            }
+        });
+    }
+
     public string GetTextAfterCursor()
     {
         if (_cursorPosition >= _clusters.Count)
@@ -125,6 +153,48 @@ internal sealed class GraphemeBuffer
                 }
             }
         });
+    }
+
+    public string GetEntireText()
+    {
+        if (_clusters.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var totalLength = _clusters.Sum(c => c.Utf16Length);
+
+        if (totalLength == 0)
+        {
+            return string.Empty;
+        }
+
+        return string.Create(totalLength, _clusters.ToArray(), static (span, clusters) =>
+        {
+            var index = 0;
+            foreach (var cluster in clusters)
+            {
+                foreach (var rune in cluster.Runes)
+                {
+                    index += rune.EncodeToUtf16(span[index..]);
+                }
+            }
+        });
+    }
+
+    public int GetDisplayWidth()
+    {
+        return _clusters.Sum(c => c.DisplayWidth);
+    }
+
+    public int GetDisplayWidthBeforeCursor()
+    {
+        if (_cursorPosition == 0)
+        {
+            return 0;
+        }
+
+        return _clusters.Take(_cursorPosition).Sum(c => c.DisplayWidth);
     }
 
     public int GetDisplayWidthAfterCursor()

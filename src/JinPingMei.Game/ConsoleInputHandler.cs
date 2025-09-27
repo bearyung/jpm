@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using JinPingMei.Game.Hosting.Text;
 using Spectre.Console;
@@ -6,20 +7,25 @@ using Spectre.Console;
 namespace JinPingMei.Game;
 
 /// <summary>
-/// Custom console input handler that supports cursor movement and proper Unicode handling
+/// Custom console input handler that supports cursor movement, command history, and proper Unicode handling
 /// </summary>
 internal sealed class ConsoleInputHandler
 {
     private readonly GraphemeBuffer _buffer = new();
     private readonly string _prompt;
     private readonly int _promptDisplayWidth;
+    private readonly List<string> _commandHistory;
+    private int _historyIndex = -1;
+    private string _currentInput = string.Empty;
 
-    public ConsoleInputHandler(string prompt)
+    public ConsoleInputHandler(string prompt, List<string>? commandHistory = null)
     {
         _prompt = prompt;
         // Calculate the actual display width of the prompt (without markup)
         var plainPrompt = prompt.RemoveMarkup();
         _promptDisplayWidth = plainPrompt.Length;
+        _commandHistory = commandHistory ?? new List<string>();
+        _historyIndex = _commandHistory.Count;
     }
 
     public string ReadLine()
@@ -91,6 +97,40 @@ internal sealed class ConsoleInputHandler
                     }
                     break;
 
+                case ConsoleKey.UpArrow:
+                    // Navigate to previous command in history
+                    if (_commandHistory.Count > 0 && _historyIndex > 0)
+                    {
+                        // Save current input if we're at the end of history
+                        if (_historyIndex == _commandHistory.Count)
+                        {
+                            _buffer.TryDrain(out _currentInput);
+                        }
+
+                        // Move to previous command
+                        _historyIndex--;
+                        ReplaceCurrentLine(_commandHistory[_historyIndex]);
+                    }
+                    break;
+
+                case ConsoleKey.DownArrow:
+                    // Navigate to next command in history
+                    if (_historyIndex < _commandHistory.Count)
+                    {
+                        _historyIndex++;
+
+                        if (_historyIndex == _commandHistory.Count)
+                        {
+                            // Restore the current input that was being typed
+                            ReplaceCurrentLine(_currentInput);
+                        }
+                        else
+                        {
+                            ReplaceCurrentLine(_commandHistory[_historyIndex]);
+                        }
+                    }
+                    break;
+
                 case ConsoleKey.LeftArrow:
                     // Move cursor left
                     if (_buffer.MoveCursorLeft(out var leftWidth))
@@ -138,8 +178,59 @@ internal sealed class ConsoleInputHandler
                     break;
 
                 default:
+                    // Handle Ctrl key combinations
+                    if (key.Modifiers == ConsoleModifiers.Control)
+                    {
+                        switch (key.Key)
+                        {
+                            case ConsoleKey.U:
+                                // Ctrl+U - Clear line from cursor to beginning
+                                ClearLineFromCursorToStart();
+                                break;
+
+                            case ConsoleKey.A:
+                                // Ctrl+A - Move to start of line (same as Home)
+                                _buffer.MoveCursorToStart();
+                                var ctrlAPos = Console.GetCursorPosition();
+                                Console.SetCursorPosition(_promptDisplayWidth, ctrlAPos.Top);
+                                break;
+
+                            case ConsoleKey.E:
+                                // Ctrl+E - Move to end of line (same as End)
+                                _buffer.MoveCursorToEnd();
+                                var ctrlEPos = Console.GetCursorPosition();
+                                var ctrlETotalWidth = _buffer.GetDisplayWidthAfterCursor();
+                                Console.SetCursorPosition(ctrlEPos.Left + ctrlETotalWidth, ctrlEPos.Top);
+                                break;
+
+                            case ConsoleKey.K:
+                                // Ctrl+K - Clear line from cursor to end
+                                ClearLineFromCursorToEnd();
+                                break;
+
+                            case ConsoleKey.W:
+                                // Ctrl+W - Delete word before cursor
+                                DeleteWordBeforeCursor();
+                                break;
+
+                            case ConsoleKey.L:
+                                // Ctrl+L - Clear screen and redraw prompt
+                                Console.Clear();
+                                Console.SetCursorPosition(0, 0);
+                                AnsiConsole.Markup(_prompt);
+                                var text = _buffer.GetEntireText();
+                                if (!string.IsNullOrEmpty(text))
+                                {
+                                    Console.Write(text);
+                                    // Reset cursor to its position within the text
+                                    var cursorOffset = _buffer.GetDisplayWidthBeforeCursor();
+                                    Console.SetCursorPosition(_promptDisplayWidth + cursorOffset, 0);
+                                }
+                                break;
+                        }
+                    }
                     // Regular character input
-                    if (key.KeyChar != '\0' && !char.IsControl(key.KeyChar))
+                    else if (key.KeyChar != '\0' && !char.IsControl(key.KeyChar))
                     {
                         // Try to create a Rune from the character
                         if (System.Text.Rune.TryCreate(key.KeyChar, out var rune))
@@ -203,5 +294,161 @@ internal sealed class ConsoleInputHandler
         }
 
         return 1;
+    }
+
+    private void ReplaceCurrentLine(string newText)
+    {
+        // Clear current line
+        var currentPos = Console.GetCursorPosition();
+        Console.SetCursorPosition(_promptDisplayWidth, currentPos.Top);
+        var currentLength = _buffer.GetDisplayWidth();
+        Console.Write(new string(' ', currentLength));
+        Console.SetCursorPosition(_promptDisplayWidth, currentPos.Top);
+
+        // Clear buffer and add new text
+        _buffer.TryDrain(out _);
+        foreach (var c in newText)
+        {
+            if (System.Text.Rune.TryCreate(c, out var rune))
+            {
+                _buffer.Append(rune);
+            }
+        }
+
+        // Display new text
+        Console.Write(newText);
+    }
+
+    private void ClearLineFromCursorToStart()
+    {
+        // Get text after cursor
+        var afterText = _buffer.GetTextAfterCursor();
+
+        // Clear buffer and add only the text after cursor
+        _buffer.TryDrain(out _);
+        foreach (var c in afterText)
+        {
+            if (System.Text.Rune.TryCreate(c, out var rune))
+            {
+                _buffer.Append(rune);
+            }
+        }
+        _buffer.MoveCursorToStart();
+
+        // Redraw the line
+        var currentPos = Console.GetCursorPosition();
+        Console.SetCursorPosition(_promptDisplayWidth, currentPos.Top);
+        Console.Write(afterText);
+
+        // Clear any leftover characters
+        var spacesToClear = currentPos.Left - _promptDisplayWidth;
+        if (spacesToClear > 0)
+        {
+            Console.Write(new string(' ', spacesToClear));
+        }
+
+        Console.SetCursorPosition(_promptDisplayWidth, currentPos.Top);
+    }
+
+    private void ClearLineFromCursorToEnd()
+    {
+        // Get text before cursor
+        var beforeText = _buffer.GetTextBeforeCursor();
+
+        // Get current cursor position for clearing
+        var currentPos = Console.GetCursorPosition();
+
+        // Calculate how much to clear
+        var textAfterCursor = _buffer.GetTextAfterCursor();
+        var widthToClear = 0;
+        foreach (var c in textAfterCursor)
+        {
+            if (System.Text.Rune.TryCreate(c, out var rune))
+            {
+                widthToClear += GetDisplayWidth(rune);
+            }
+        }
+
+        // Clear from cursor to end
+        if (widthToClear > 0)
+        {
+            Console.Write(new string(' ', widthToClear));
+            Console.SetCursorPosition(currentPos.Left, currentPos.Top);
+        }
+
+        // Update buffer
+        _buffer.TryDrain(out _);
+        foreach (var c in beforeText)
+        {
+            if (System.Text.Rune.TryCreate(c, out var rune))
+            {
+                _buffer.Append(rune);
+            }
+        }
+    }
+
+    private void DeleteWordBeforeCursor()
+    {
+        var text = _buffer.GetTextBeforeCursor();
+        if (string.IsNullOrEmpty(text))
+            return;
+
+        // Find the last word boundary
+        var lastIndex = text.Length - 1;
+
+        // Skip trailing spaces
+        while (lastIndex >= 0 && char.IsWhiteSpace(text[lastIndex]))
+        {
+            lastIndex--;
+        }
+
+        // Find start of word
+        while (lastIndex >= 0 && !char.IsWhiteSpace(text[lastIndex]))
+        {
+            lastIndex--;
+        }
+
+        var newText = lastIndex >= 0 ? text.Substring(0, lastIndex + 1) : string.Empty;
+        var afterText = _buffer.GetTextAfterCursor();
+
+        // Calculate width to clear
+        var deletedWidth = 0;
+        for (int i = newText.Length; i < text.Length; i++)
+        {
+            if (System.Text.Rune.TryCreate(text[i], out var rune))
+            {
+                deletedWidth += GetDisplayWidth(rune);
+            }
+        }
+
+        // Update buffer
+        _buffer.TryDrain(out _);
+        foreach (var c in newText + afterText)
+        {
+            if (System.Text.Rune.TryCreate(c, out var rune))
+            {
+                _buffer.Append(rune);
+            }
+        }
+
+        // Move cursor to end of newText
+        for (int i = 0; i < newText.Length; i++)
+        {
+            _buffer.MoveCursorLeft(out _);
+        }
+
+        // Redraw
+        var currentPos = Console.GetCursorPosition();
+        var newLeft = currentPos.Left - deletedWidth;
+        Console.SetCursorPosition(newLeft, currentPos.Top);
+        Console.Write(afterText);
+
+        // Clear leftover characters
+        if (deletedWidth > 0)
+        {
+            Console.Write(new string(' ', deletedWidth));
+        }
+
+        Console.SetCursorPosition(newLeft, currentPos.Top);
     }
 }
