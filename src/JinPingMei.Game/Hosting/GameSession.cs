@@ -34,7 +34,7 @@ public sealed class GameSession
 
         var handlers = BuildStoryCommandHandlers(diagnostics, additionalHandlers);
         _commandRouter = CommandRouter.CreateDefault(localization, diagnostics, handlers);
-        _commandContext = new CommandContext(_state, _world, _story, localization, diagnostics);
+        _commandContext = new CommandContext(_state, _world, _story, _runtime, localization, diagnostics);
     }
 
     public SessionState State => _state;

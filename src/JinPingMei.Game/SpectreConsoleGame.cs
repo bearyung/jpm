@@ -225,8 +225,7 @@ public sealed class SpectreConsoleGame
             }
 
             if (trimmedInput.Equals("/progress", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/p", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("進度"))  // Chinese shortcut
+                trimmedInput.Equals("/p", StringComparison.OrdinalIgnoreCase))
             {
                 DisplayProgress();
                 needsPromptSpacing = true;
@@ -282,6 +281,12 @@ public sealed class SpectreConsoleGame
                 else if (commandResult.Lines[0] == "[EXAMINE_SELECT_DISPLAY]")
                 {
                     HandleExamineSelection();
+                    needsPromptSpacing = true;
+                    continue;
+                }
+                else if (commandResult.Lines[0] == "[TALK_SELECT_DISPLAY]")
+                {
+                    HandleTalkSelection();
                     needsPromptSpacing = true;
                     continue;
                 }
@@ -592,6 +597,65 @@ public sealed class SpectreConsoleGame
         }
     }
 
+    private void HandleTalkSelection()
+    {
+        var snapshot = _gameSession.GetCurrentSceneSnapshot();
+
+        // Check if there are any NPCs to talk to
+        if (snapshot.NpcNames.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[dim]這裡沒有可以對話的人。[/]");
+            return;
+        }
+
+        // Create selection prompt for NPCs
+        var prompt = new SelectionPrompt<string>()
+            .Title("[bold cyan]請選擇要對話的對象：[/]")
+            .PageSize(10)
+            .MoreChoicesText("[dim](使用上下方向鍵移動，Enter 選擇)[/]");
+
+        // Add cancel option first
+        prompt.AddChoice("[red]取消[/]");
+
+        // Add each NPC as a choice
+        foreach (var npc in snapshot.NpcNames)
+        {
+            prompt.AddChoice($"[yellow]{npc}[/] [dim](對話)[/]");
+        }
+
+        // Show the prompt and get selection
+        var selection = AnsiConsole.Prompt(prompt);
+
+        // Handle the selection
+        if (selection == "[red]取消[/]")
+        {
+            AnsiConsole.MarkupLine("[dim]取消對話選擇。[/]");
+            return;
+        }
+
+        // Extract NPC name (remove markup and description)
+        var npcName = selection;
+        if (npcName.StartsWith("[yellow]"))
+        {
+            npcName = npcName.Substring(8); // Remove "[yellow]"
+            var endIndex = npcName.IndexOf("[/]");
+            if (endIndex > 0)
+            {
+                npcName = npcName.Substring(0, endIndex);
+            }
+        }
+
+        // Execute the talk command
+        var talkCommand = $"/talk {npcName}";
+        var commandResult = _gameSession.HandleInput(talkCommand);
+
+        // Display the result
+        foreach (var line in commandResult.Lines)
+        {
+            AnsiConsole.WriteLine(line);
+        }
+    }
+
     private void DisplayInventory()
     {
         // For now, show a placeholder - will be expanded when inventory system is added
@@ -797,6 +861,7 @@ public sealed class SpectreConsoleGame
         AnsiConsole.MarkupLine("  [yellow]/look[/]        ([dim]l[/])    - 查看場景描述、人物與出口");
         AnsiConsole.MarkupLine("  [yellow]/go[/] <地點>    ([dim]g[/])    - 前往指定地點");
         AnsiConsole.MarkupLine("  [yellow]/examine[/] <目標> ([dim]ex[/]) - 仔細檢查人物或場景");
+        AnsiConsole.MarkupLine("  [yellow]/talk[/] <角色>  ([dim]t[/])    - 與場景中的角色對話");
         AnsiConsole.WriteLine();
 
         // Information commands section
@@ -831,12 +896,13 @@ public sealed class SpectreConsoleGame
         AnsiConsole.WriteLine();
 
         // Essential commands only - the bare minimum to play
-        AnsiConsole.MarkupLine("  [cyan]/look[/]   ([dim]l[/])    - 查看周圍");
-        AnsiConsole.MarkupLine("  [cyan]/go[/]     ([dim]g[/])    - 前往地點");
-        AnsiConsole.MarkupLine("  [cyan]/examine[/]([dim]x[/])    - 檢查目標");
-        AnsiConsole.MarkupLine("  [cyan]/progress[/]([dim]p[/])   - 查看進度");
-        AnsiConsole.MarkupLine("  [cyan]/help[/]   ([dim]h[/])    - 顯示此參考");
-        AnsiConsole.MarkupLine("  [cyan]/quit[/]   ([dim]q[/])    - 離開遊戲");
+        AnsiConsole.MarkupLine("  [cyan]/look[/]    ([dim]l[/])    - 查看周圍");
+        AnsiConsole.MarkupLine("  [cyan]/go[/]      ([dim]g[/])    - 前往地點");
+        AnsiConsole.MarkupLine("  [cyan]/examine[/] ([dim]ex[/])   - 檢查目標");
+        AnsiConsole.MarkupLine("  [cyan]/talk[/]    ([dim]t[/])    - 與人對話");
+        AnsiConsole.MarkupLine("  [cyan]/progress[/]([dim]p[/])    - 查看進度");
+        AnsiConsole.MarkupLine("  [cyan]/help[/]    ([dim]h[/])    - 顯示此參考");
+        AnsiConsole.MarkupLine("  [cyan]/quit[/]    ([dim]q[/])    - 離開遊戲");
         AnsiConsole.WriteLine();
 
         AnsiConsole.MarkupLine("[dim]提示：輸入 [bold]/commands[/] 查看完整指令列表與詳細說明[/]");

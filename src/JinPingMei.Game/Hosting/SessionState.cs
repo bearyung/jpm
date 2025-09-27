@@ -15,4 +15,8 @@ public sealed class SessionState
     public string? StoryHostId { get; set; }
 
     public bool HasStoryHost => !string.IsNullOrWhiteSpace(StoryHostId);
+
+    public string? StoryHost => StoryHostId;
+
+    public int ChapterProgress { get; set; } = 0;
 }
