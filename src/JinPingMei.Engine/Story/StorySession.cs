@@ -6,6 +6,42 @@ using System.Text.Json;
 
 namespace JinPingMei.Engine.Story;
 
+public enum MissionStatus
+{
+    Locked,
+    InProgress,
+    Completed
+}
+
+public sealed class MissionProgressInfo
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public MissionStatus Status { get; set; }
+}
+
+public sealed class StoryProgressData
+{
+    public string VolumeTitle { get; set; } = string.Empty;
+    public string EpisodeLabel { get; set; } = string.Empty;
+    public string? HostId { get; set; }
+    public int CurrentChapterIndex { get; set; }
+    public int CurrentChapterNumber { get; set; }
+    public List<string> ChapterTitles { get; set; } = new();
+    public int TotalChapters { get; set; }
+    public string? CurrentSceneTitle { get; set; }
+    public int CurrentSceneIndex { get; set; }
+    public int TotalScenesInChapter { get; set; }
+    public string? CurrentBeatProgress { get; set; }
+    public List<MissionProgressInfo> CurrentChapterMissions { get; set; } = new();
+    public int CompletedMissions { get; set; }
+    public int TotalMissions { get; set; }
+    public int OverallProgress { get; set; }
+    public double ChapterProgress { get; set; }
+    public double MissionProgress { get; set; }
+}
+
 public sealed class StorySession
 {
     private readonly VolumeDefinition _volume;
@@ -163,6 +199,172 @@ public sealed class StorySession
         }
 
         return builder.ToString();
+    }
+
+    public string DescribeProgress()
+    {
+        var builder = new StringBuilder();
+
+        // Episode and Volume Info
+        builder.AppendLine($"【當前進度】");
+        builder.AppendLine($"卷別：{_volume.Title} ({_volume.EpisodeLabel})");
+        builder.AppendLine($"宿主：{State.HostId ?? "未選擇"}");
+        builder.AppendLine();
+
+        // Chapter Progress
+        if (_chapterIndex < _chapters.Count)
+        {
+            var currentChapter = _chapters[_chapterIndex];
+            builder.AppendLine($"【章節進度】");
+            builder.AppendLine($"當前章節：第{currentChapter.Number}回");
+            if (currentChapter.Titles.Count > 0)
+            {
+                builder.AppendLine($"章節標題：{string.Join(" / ", currentChapter.Titles)}");
+            }
+            builder.AppendLine();
+
+            // Scene Progress
+            if (_sceneIndex < currentChapter.Gameplay.Scenes.Count)
+            {
+                var currentScene = currentChapter.Gameplay.Scenes[_sceneIndex];
+                builder.AppendLine($"【場景進度】");
+                builder.AppendLine($"當前場景：{currentScene.Title} ({_sceneIndex + 1}/{currentChapter.Gameplay.Scenes.Count})");
+
+                if (currentScene.Beats.Count > 0)
+                {
+                    builder.AppendLine($"節拍進度：{_beatIndex + 1}/{currentScene.Beats.Count}");
+                }
+                builder.AppendLine();
+            }
+
+            // Mission Progress for Current Chapter
+            if (currentChapter.Gameplay.Objectives.Count > 0)
+            {
+                builder.AppendLine($"【本章任務】");
+                foreach (var objective in currentChapter.Gameplay.Objectives)
+                {
+                    if (_missions.TryGetValue(objective.Id, out var mission))
+                    {
+                        string status;
+                        if (!mission.IsUnlocked)
+                        {
+                            status = "🔒 未解鎖";
+                        }
+                        else if (mission.IsCompleted)
+                        {
+                            status = "✓ 已完成";
+                        }
+                        else
+                        {
+                            status = "○ 進行中";
+                        }
+
+                        builder.AppendLine($"{status} {objective.Title}");
+                        if (mission.IsUnlocked && !mission.IsCompleted && !string.IsNullOrWhiteSpace(objective.Description))
+                        {
+                            builder.AppendLine($"   {objective.Description}");
+                        }
+                    }
+                }
+                builder.AppendLine();
+            }
+        }
+
+        // Overall Mission Statistics
+        var completedMissions = _missions.Values.Count(m => m.IsCompleted);
+        var totalMissions = _missions.Count;
+        builder.AppendLine($"【總體進度】");
+        builder.AppendLine($"章節進度：第{_chapterIndex + 1}章 / 共{_chapters.Count}章");
+        builder.AppendLine($"任務完成：{completedMissions}/{totalMissions}");
+
+        // Calculate percentage
+        if (totalMissions > 0)
+        {
+            var percentage = (completedMissions * 100) / totalMissions;
+            builder.AppendLine($"完成度：{percentage}%");
+        }
+
+        return builder.ToString();
+    }
+
+    public StoryProgressData GetProgressData()
+    {
+        var data = new StoryProgressData
+        {
+            VolumeTitle = _volume.Title,
+            EpisodeLabel = _volume.EpisodeLabel,
+            HostId = State.HostId,
+            CurrentChapterIndex = _chapterIndex,
+            TotalChapters = _chapters.Count
+        };
+
+        // Current chapter details
+        if (_chapterIndex < _chapters.Count)
+        {
+            var currentChapter = _chapters[_chapterIndex];
+            data.CurrentChapterNumber = currentChapter.Number;
+            data.ChapterTitles = currentChapter.Titles.ToList();
+            data.TotalScenesInChapter = currentChapter.Gameplay.Scenes.Count;
+
+            // Current scene details
+            if (_sceneIndex < currentChapter.Gameplay.Scenes.Count)
+            {
+                var currentScene = currentChapter.Gameplay.Scenes[_sceneIndex];
+                data.CurrentSceneTitle = currentScene.Title;
+                data.CurrentSceneIndex = _sceneIndex;
+
+                if (currentScene.Beats.Count > 0)
+                {
+                    data.CurrentBeatProgress = $"{_beatIndex + 1}/{currentScene.Beats.Count}";
+                }
+            }
+
+            // Chapter missions
+            foreach (var objective in currentChapter.Gameplay.Objectives)
+            {
+                if (_missions.TryGetValue(objective.Id, out var mission))
+                {
+                    var missionInfo = new MissionProgressInfo
+                    {
+                        Id = objective.Id,
+                        Title = objective.Title,
+                        Description = objective.Description
+                    };
+
+                    if (!mission.IsUnlocked)
+                    {
+                        missionInfo.Status = MissionStatus.Locked;
+                    }
+                    else if (mission.IsCompleted)
+                    {
+                        missionInfo.Status = MissionStatus.Completed;
+                    }
+                    else
+                    {
+                        missionInfo.Status = MissionStatus.InProgress;
+                    }
+
+                    data.CurrentChapterMissions.Add(missionInfo);
+                }
+            }
+        }
+
+        // Overall statistics
+        data.CompletedMissions = _missions.Values.Count(m => m.IsCompleted);
+        data.TotalMissions = _missions.Count;
+
+        if (data.TotalMissions > 0)
+        {
+            data.OverallProgress = (data.CompletedMissions * 100) / data.TotalMissions;
+            data.MissionProgress = (double)data.CompletedMissions / data.TotalMissions * 100;
+        }
+
+        if (data.TotalChapters > 0)
+        {
+            data.ChapterProgress = ((double)_chapterIndex / data.TotalChapters) * 100;
+        }
+
+        return data;
     }
 
     private void ResetProgress()
@@ -429,8 +631,15 @@ public sealed class StorySession
                 var payload = hook.Payload.Value;
                 if (payload.TryGetProperty("QuestId", out var questElement) && questElement.ValueKind == JsonValueKind.String)
                 {
-                    State.UnlockSideQuest(questElement.GetString()!);
-                    return $"取得支線：{questElement.GetString()}";
+                    var questId = questElement.GetString()!;
+                    State.UnlockSideQuest(questId);
+                    // Also unlock the corresponding mission state
+                    if (_missions.TryGetValue(questId, out var mission))
+                    {
+                        mission.Unlock();
+                        return $"取得支線：{mission.Definition.Title}";
+                    }
+                    return $"取得支線：{questId}";
                 }
                 break;
             }
@@ -444,8 +653,15 @@ public sealed class StorySession
                 var payload = hook.Payload.Value;
                 if (payload.TryGetProperty("MissionId", out var missionElement) && missionElement.ValueKind == JsonValueKind.String)
                 {
-                    State.UnlockMission(missionElement.GetString()!);
-                    return $"解鎖任務：{missionElement.GetString()}";
+                    var missionId = missionElement.GetString()!;
+                    State.UnlockMission(missionId);
+                    // Also unlock the corresponding mission state
+                    if (_missions.TryGetValue(missionId, out var mission))
+                    {
+                        mission.Unlock();
+                        return $"解鎖任務：{mission.Definition.Title}";
+                    }
+                    return $"解鎖任務：{missionId}";
                 }
                 break;
             }
@@ -511,27 +727,47 @@ public sealed class StorySession
 
     private void EvaluateMissions(out IReadOnlyList<string> messages)
     {
-        var completedMessages = new List<string>();
+        var outputMessages = new List<string>();
+
         foreach (var mission in _missions.Values)
         {
-            if (mission.IsCompleted)
+            // First check if locked missions should be unlocked
+            if (!mission.IsUnlocked && mission.Definition.Availability?.UnlockConditions?.Count > 0)
             {
-                continue;
+                if (CheckUnlockConditions(mission.Definition.Availability.UnlockConditions))
+                {
+                    mission.Unlock();
+                    outputMessages.Add($"解鎖任務：{mission.Definition.Title}");
+                }
             }
 
-            if (CheckMissionCompletion(mission.Definition))
+            // Then check if unlocked missions are completed
+            if (mission.IsUnlocked && !mission.IsCompleted)
             {
-                mission.MarkComplete();
-                completedMessages.Add($"任務完成：{mission.Definition.Title}");
+                if (CheckMissionCompletion(mission.Definition))
+                {
+                    mission.MarkComplete();
+                    outputMessages.Add($"任務完成：{mission.Definition.Title}");
+                }
             }
         }
 
-        messages = completedMessages;
+        messages = outputMessages;
     }
 
     private bool CheckMissionCompletion(ObjectiveDefinition objective)
     {
-        foreach (var condition in objective.Completion)
+        return CheckConditions(objective.Completion);
+    }
+
+    private bool CheckUnlockConditions(IReadOnlyList<ObjectiveCompletionCondition> conditions)
+    {
+        return CheckConditions(conditions);
+    }
+
+    private bool CheckConditions(IReadOnlyList<ObjectiveCompletionCondition> conditions)
+    {
+        foreach (var condition in conditions)
         {
             switch (condition.Type.ToLowerInvariant())
             {
@@ -543,6 +779,12 @@ public sealed class StorySession
                     break;
                 case "inventory":
                     if (!EvaluateInventoryCondition(condition))
+                    {
+                        return false;
+                    }
+                    break;
+                case "mission":
+                    if (!EvaluateMissionCondition(condition))
                     {
                         return false;
                     }
@@ -657,6 +899,22 @@ public sealed class StorySession
         }
 
         return value.CompareTo(operand);
+    }
+
+    private bool EvaluateMissionCondition(ObjectiveCompletionCondition condition)
+    {
+        if (string.IsNullOrWhiteSpace(condition.Id))
+        {
+            return false;
+        }
+
+        // Check if the specified mission is completed
+        if (_missions.TryGetValue(condition.Id, out var mission))
+        {
+            return mission.IsCompleted;
+        }
+
+        return false;
     }
 
     private bool EvaluateInventoryCondition(ObjectiveCompletionCondition condition)

@@ -286,7 +286,10 @@
             "Location": "ColdWallet",
             "MinItems": 1
           }
-        ]
+        ],
+        "Availability": {
+          "DefaultState": "Unlocked"
+        }
       },
       {
         "Id": "sq_vol1_legend-rumors",
@@ -349,7 +352,18 @@
             "Comparison": "==",
             "Value": true
           }
-        ]
+        ],
+        "Availability": {
+          "DefaultState": "Locked",
+          "UnlockConditions": [
+            {
+              "Type": "StateFlag",
+              "Id": "vol1.meta.progress_board_done",
+              "Comparison": "==",
+              "Value": true
+            }
+          ]
+        }
       }
     ],
     "KeyItems": [

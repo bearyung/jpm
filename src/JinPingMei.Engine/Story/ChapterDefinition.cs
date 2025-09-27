@@ -102,6 +102,18 @@ public sealed class ObjectiveDefinition
 
     [JsonPropertyName("Completion")]
     public IReadOnlyList<ObjectiveCompletionCondition> Completion { get; init; } = Array.Empty<ObjectiveCompletionCondition>();
+
+    [JsonPropertyName("Availability")]
+    public ObjectiveAvailability? Availability { get; init; }
+}
+
+public sealed class ObjectiveAvailability
+{
+    [JsonPropertyName("DefaultState")]
+    public string DefaultState { get; init; } = "Unlocked";
+
+    [JsonPropertyName("UnlockConditions")]
+    public IReadOnlyList<ObjectiveCompletionCondition> UnlockConditions { get; init; } = Array.Empty<ObjectiveCompletionCondition>();
 }
 
 public sealed class ObjectiveCompletionCondition

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using JinPingMei.Engine.Story;
 using JinPingMei.Game.Hosting;
 using JinPingMei.Game.Hosting.Commands;
 using JinPingMei.Game.Localization;
@@ -151,7 +152,8 @@ public sealed class SpectreConsoleGame
 
             // Handle display commands using Spectre.Console components
             if (trimmedInput.Equals("/look", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/l", StringComparison.OrdinalIgnoreCase))  // Allow shortcut
+                trimmedInput.Equals("/l", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("看"))  // Chinese shortcut
             {
                 DisplayLook();
                 needsPromptSpacing = true;
@@ -159,7 +161,8 @@ public sealed class SpectreConsoleGame
             }
 
             if (trimmedInput.Equals("/status", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/s", StringComparison.OrdinalIgnoreCase))  // Allow shortcut
+                trimmedInput.Equals("/s", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("狀態"))  // Chinese shortcut
             {
                 DisplayStatus();
                 needsPromptSpacing = true;
@@ -167,7 +170,8 @@ public sealed class SpectreConsoleGame
             }
 
             if (trimmedInput.Equals("/map", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/m", StringComparison.OrdinalIgnoreCase))  // Allow shortcut
+                trimmedInput.Equals("/m", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("地圖"))  // Chinese shortcut
             {
                 DisplayMap();
                 needsPromptSpacing = true;
@@ -176,7 +180,8 @@ public sealed class SpectreConsoleGame
 
             if (trimmedInput.Equals("/inventory", StringComparison.OrdinalIgnoreCase) ||
                 trimmedInput.Equals("/inv", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/i", StringComparison.OrdinalIgnoreCase))  // Allow shortcuts
+                trimmedInput.Equals("/i", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("物品"))  // Chinese shortcut
             {
                 DisplayInventory();
                 needsPromptSpacing = true;
@@ -191,10 +196,31 @@ public sealed class SpectreConsoleGame
                 continue;
             }
 
+            if (trimmedInput.Equals("/progress", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("/p", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("進度"))  // Chinese shortcut
+            {
+                DisplayProgress();
+                needsPromptSpacing = true;
+                continue;
+            }
+
+            if (trimmedInput.Equals("/progress detail", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("/pd", StringComparison.OrdinalIgnoreCase) ||
+                trimmedInput.Equals("進度詳情"))  // Chinese shortcut
+            {
+                DisplayProgressDetail();
+                needsPromptSpacing = true;
+                continue;
+            }
+
+            // Convert Chinese shortcuts to their command equivalents
+            var processedInput = ConvertChineseShortcut(trimmedInput);
+
             CommandResult commandResult;
             try
             {
-                commandResult = _gameSession.HandleInput(trimmedInput);
+                commandResult = _gameSession.HandleInput(processedInput);
             }
             catch (Exception ex)
             {
@@ -202,6 +228,38 @@ public sealed class SpectreConsoleGame
                 AnsiConsole.MarkupLine("[red]Error processing command. Please try again.[/]");
                 needsPromptSpacing = true;
                 continue;
+            }
+
+            // Check for special display markers
+            if (commandResult.Lines.Count == 1)
+            {
+                if (commandResult.Lines[0] == "[GO_SELECT_DISPLAY]")
+                {
+                    HandleGoSelection();
+                    needsPromptSpacing = true;
+                    continue;
+                }
+                else if (commandResult.Lines[0] == "[HELP_DISPLAY]")
+                {
+                    DisplayHelp();
+                    needsPromptSpacing = true;
+                    continue;
+                }
+                else if (commandResult.Lines[0] == "[QUIT_CONFIRM_DISPLAY]")
+                {
+                    if (HandleQuitConfirmation())
+                    {
+                        break; // Exit the game loop
+                    }
+                    needsPromptSpacing = true;
+                    continue;
+                }
+                else if (commandResult.Lines[0] == "[EXAMINE_SELECT_DISPLAY]")
+                {
+                    HandleExamineSelection();
+                    needsPromptSpacing = true;
+                    continue;
+                }
             }
 
             // Display response (skip special display markers)
@@ -230,62 +288,50 @@ public sealed class SpectreConsoleGame
     private void DisplayLook()
     {
         var snapshot = _gameSession.GetCurrentSceneSnapshot();
-        var content = new StringBuilder();
 
         // Scene header with location
-        content.AppendLine($"[bold cyan]{snapshot.SceneName}[/]");
-        content.AppendLine($"[dim]{snapshot.LocaleName} • {snapshot.LocaleSummary}[/]");
-        content.AppendLine();
+        AnsiConsole.MarkupLine($"[bold cyan]{snapshot.SceneName}[/]");
+        AnsiConsole.MarkupLine($"[dim]{snapshot.LocaleName} • {snapshot.LocaleSummary}[/]");
+        AnsiConsole.WriteLine();
 
         // Scene description
-        content.AppendLine("[bold]場景描述[/]");
-        content.AppendLine(snapshot.SceneDescription);
-        content.AppendLine();
+        AnsiConsole.MarkupLine("[bold]場景描述[/]");
+        AnsiConsole.WriteLine(snapshot.SceneDescription);
+        AnsiConsole.WriteLine();
 
         // NPCs present
-        content.AppendLine("[bold]在場人物[/]");
+        AnsiConsole.MarkupLine("[bold]在場人物[/]");
         if (snapshot.NpcNames.Count == 0)
         {
-            content.AppendLine("[dim]  這裡沒有其他人[/]");
+            AnsiConsole.MarkupLine("[dim]  這裡沒有其他人[/]");
         }
         else
         {
             foreach (var npc in snapshot.NpcNames)
             {
-                content.AppendLine($"  [yellow]•[/] {npc}");
+                AnsiConsole.MarkupLine($"  [yellow]•[/] {npc}");
             }
         }
-        content.AppendLine();
+        AnsiConsole.WriteLine();
 
         // Available exits
-        content.AppendLine("[bold]可前往[/]");
+        AnsiConsole.MarkupLine("[bold]可前往[/]");
         if (snapshot.Exits.Count == 0)
         {
-            content.AppendLine("[dim]  沒有明顯的出口[/]");
+            AnsiConsole.MarkupLine("[dim]  沒有明顯的出口[/]");
         }
         else
         {
             foreach (var exit in snapshot.Exits)
             {
-                content.Append($"  [green]→[/] {exit.DisplayName}");
+                var exitLine = $"  [green]→[/] {exit.DisplayName}";
                 if (!string.IsNullOrWhiteSpace(exit.Description))
                 {
-                    content.Append($" [dim]({exit.Description})[/]");
+                    exitLine += $" [dim]({exit.Description})[/]";
                 }
-                content.AppendLine();
+                AnsiConsole.MarkupLine(exitLine);
             }
         }
-
-        // Create and display a Spectre.Console panel
-        var panel = new Panel(content.ToString().TrimEnd())
-        {
-            Header = new PanelHeader("環境觀察"),
-            Border = BoxBorder.Rounded,
-            Padding = new Padding(1, 0),
-            Expand = false
-        };
-
-        AnsiConsole.Write(panel);
     }
 
     private void DisplayStatus()
@@ -364,6 +410,165 @@ public sealed class SpectreConsoleGame
         AnsiConsole.Write(panel);
     }
 
+    private void HandleGoSelection()
+    {
+        var snapshot = _gameSession.GetCurrentSceneSnapshot();
+
+        // Check if there are any exits available
+        if (snapshot.Exits.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[yellow]這個位置沒有可前往的地點。[/]");
+            return;
+        }
+
+        // Create selection prompt with available exits
+        var prompt = new SelectionPrompt<string>()
+            .Title("[bold cyan]請選擇要前往的地點：[/]")
+            .PageSize(10)
+            .MoreChoicesText("[dim](使用上下方向鍵移動，Enter 選擇)[/]");
+
+        // Add cancel option first
+        prompt.AddChoice("[red]取消[/]");
+
+        // Add each available exit as a choice
+        foreach (var exit in snapshot.Exits)
+        {
+            var choice = exit.DisplayName;
+            if (!string.IsNullOrWhiteSpace(exit.Description))
+            {
+                choice += $" [dim]({exit.Description})[/]";
+            }
+            prompt.AddChoice(choice);
+        }
+
+        // Show the prompt and get selection
+        var selection = AnsiConsole.Prompt(prompt);
+
+        // Handle the selection
+        if (selection == "[red]取消[/]")
+        {
+            AnsiConsole.MarkupLine("[dim]已取消前往。[/]");
+            return;
+        }
+
+        // Extract the actual location name (remove description if present)
+        var locationName = selection;
+        var descriptionIndex = locationName.IndexOf(" [dim](");
+        if (descriptionIndex > 0)
+        {
+            locationName = locationName.Substring(0, descriptionIndex);
+        }
+
+        // Execute the go command with the selected location
+        var goCommand = $"/go {locationName}";
+        var commandResult = _gameSession.HandleInput(goCommand);
+
+        // Display the result
+        foreach (var line in commandResult.Lines)
+        {
+            AnsiConsole.WriteLine(line);
+        }
+    }
+
+    private bool HandleQuitConfirmation()
+    {
+        // Create confirmation prompt
+        var prompt = new SelectionPrompt<string>()
+            .Title("[bold yellow]確定要離開遊戲嗎？[/]")
+            .PageSize(5)
+            .MoreChoicesText("[dim](使用上下方向鍵移動，Enter 選擇)[/]");
+
+        // Add options with "No" as default (first choice)
+        prompt.AddChoice("[green]不，繼續遊戲[/]");
+        prompt.AddChoice("[red]是的，離開遊戲[/]");
+
+        // Show the prompt and get selection
+        var selection = AnsiConsole.Prompt(prompt);
+
+        // Handle the selection
+        if (selection == "[red]是的，離開遊戲[/]")
+        {
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("[yellow]感謝遊玩，再見！[/]");
+            return true; // Confirm quit
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("[dim]已取消離開。[/]");
+            return false; // Cancel quit
+        }
+    }
+
+    private void HandleExamineSelection()
+    {
+        var snapshot = _gameSession.GetCurrentSceneSnapshot();
+
+        // Create selection prompt for examination targets
+        var prompt = new SelectionPrompt<string>()
+            .Title("[bold cyan]請選擇要檢查的目標：[/]")
+            .PageSize(10)
+            .MoreChoicesText("[dim](使用上下方向鍵移動，Enter 選擇)[/]");
+
+        // Add cancel option first
+        prompt.AddChoice("[red]取消[/]");
+
+        // Add option to examine the scene itself
+        prompt.AddChoice("[cyan]當前環境[/] [dim](場景描述)[/]");
+
+        // Add each NPC as a choice
+        if (snapshot.NpcNames.Count > 0)
+        {
+            foreach (var npc in snapshot.NpcNames)
+            {
+                prompt.AddChoice($"[yellow]{npc}[/] [dim](人物)[/]");
+            }
+        }
+
+        // Show the prompt and get selection
+        var selection = AnsiConsole.Prompt(prompt);
+
+        // Handle the selection
+        if (selection == "[red]取消[/]")
+        {
+            AnsiConsole.MarkupLine("[dim]已取消檢查。[/]");
+            return;
+        }
+
+        string examineCommand;
+        if (selection.StartsWith("[cyan]當前環境"))
+        {
+            // Examine the scene
+            examineCommand = "/examine 場景";
+        }
+        else
+        {
+            // Extract NPC name (remove markup and description)
+            var npcName = selection;
+
+            // Remove the markup tags and description
+            if (npcName.StartsWith("[yellow]"))
+            {
+                npcName = npcName.Substring(8); // Remove "[yellow]"
+                var endIndex = npcName.IndexOf("[/]");
+                if (endIndex > 0)
+                {
+                    npcName = npcName.Substring(0, endIndex);
+                }
+            }
+
+            examineCommand = $"/examine {npcName}";
+        }
+
+        // Execute the examine command
+        var commandResult = _gameSession.HandleInput(examineCommand);
+
+        // Display the result
+        foreach (var line in commandResult.Lines)
+        {
+            AnsiConsole.WriteLine(line);
+        }
+    }
+
     private void DisplayInventory()
     {
         // For now, show a placeholder - will be expanded when inventory system is added
@@ -386,6 +591,168 @@ public sealed class SpectreConsoleGame
         };
 
         AnsiConsole.Write(panel);
+    }
+
+    private void DisplayProgress()
+    {
+        // Check if story is loaded
+        var story = _gameSession.Story;
+        if (story is null)
+        {
+            AnsiConsole.MarkupLine("[red]尚未載入劇情模組。[/]");
+            return;
+        }
+
+        // Get progress data from story
+        var progressData = story.GetProgressData();
+
+        // Show inline progress info that stays in conversation
+        DisplayProgressInfo(progressData);
+    }
+
+    private void DisplayProgressInfo(StoryProgressData progressData)
+    {
+        // Create a compact inline display
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine($"[bold cyan]【進度】[/] {progressData.VolumeTitle} • 第{progressData.CurrentChapterNumber}回 ({progressData.CurrentChapterIndex + 1}/{progressData.TotalChapters})");
+        AnsiConsole.MarkupLine($"[bold cyan]【任務】[/] 完成 {progressData.CompletedMissions}/{progressData.TotalMissions} ([yellow]{progressData.OverallProgress}%[/])");
+
+        // Show current scene if available
+        if (progressData.CurrentSceneTitle != null)
+        {
+            AnsiConsole.MarkupLine($"[bold cyan]【場景】[/] {progressData.CurrentSceneTitle} ({progressData.CurrentSceneIndex + 1}/{progressData.TotalScenesInChapter})");
+        }
+
+        // Quick mission summary
+        if (progressData.CurrentChapterMissions?.Count > 0)
+        {
+            var inProgress = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.InProgress);
+            var locked = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.Locked);
+            var completed = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.Completed);
+
+            AnsiConsole.MarkupLine($"[dim]       進行中: {inProgress} | 已完成: {completed} | 未解鎖: {locked}[/]");
+        }
+
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("[dim]輸入 [bold]/progress detail[/] 或 [bold]/pd[/] 查看完整任務列表[/]");
+    }
+
+    private void DisplayProgressDetail()
+    {
+        // Check if story is loaded
+        var story = _gameSession.Story;
+        if (story is null)
+        {
+            AnsiConsole.MarkupLine("[red]尚未載入劇情模組。[/]");
+            return;
+        }
+
+        // Get progress data and display in waterfall format
+        var progressData = story.GetProgressData();
+        DisplayProgressDetailWaterfall(progressData);
+    }
+
+    private void DisplayProgressDetailWaterfall(StoryProgressData progressData)
+    {
+        AnsiConsole.WriteLine();
+
+        // Section 1: Volume and Episode Info
+        AnsiConsole.MarkupLine("[bold cyan]【當前進度】[/]");
+        AnsiConsole.MarkupLine($"[bold]{progressData.VolumeTitle}[/] - [dim]{progressData.EpisodeLabel}[/]");
+        AnsiConsole.MarkupLine($"宿主：[yellow]{progressData.HostId ?? "未選擇"}[/]");
+        AnsiConsole.WriteLine();
+
+        // Section 2: Chapter Progress
+        AnsiConsole.MarkupLine("[bold cyan]【章節資訊】[/]");
+        if (progressData.CurrentChapterNumber > 0)
+        {
+            AnsiConsole.MarkupLine($"[bold]第{progressData.CurrentChapterNumber}回[/]");
+            if (progressData.ChapterTitles?.Count > 0)
+            {
+                foreach (var title in progressData.ChapterTitles)
+                {
+                    AnsiConsole.MarkupLine($"  [italic]{title}[/]");
+                }
+            }
+            AnsiConsole.MarkupLine($"進度：第 {progressData.CurrentChapterIndex + 1} 章 / 共 {progressData.TotalChapters} 章");
+
+            if (progressData.CurrentSceneTitle != null)
+            {
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine($"[bold]當前場景：[/]{progressData.CurrentSceneTitle} ({progressData.CurrentSceneIndex + 1}/{progressData.TotalScenesInChapter})");
+                if (progressData.CurrentBeatProgress != null)
+                {
+                    AnsiConsole.MarkupLine($"節拍進度：{progressData.CurrentBeatProgress}");
+                }
+            }
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("[dim]尚未開始[/]");
+        }
+        AnsiConsole.WriteLine();
+
+        // Section 3: Mission Progress
+        AnsiConsole.MarkupLine("[bold cyan]【任務狀態】[/]");
+
+        if (progressData.CurrentChapterMissions?.Count > 0)
+        {
+            foreach (var mission in progressData.CurrentChapterMissions)
+            {
+                var statusIcon = mission.Status switch
+                {
+                    MissionStatus.Locked => "[red]🔒[/]",
+                    MissionStatus.InProgress => "[yellow]○[/]",
+                    MissionStatus.Completed => "[green]✓[/]",
+                    _ => "[dim]?[/]"
+                };
+
+                var titleMarkup = mission.Status switch
+                {
+                    MissionStatus.Locked => $"[dim strikethrough]{mission.Title}[/]",
+                    MissionStatus.InProgress => $"[bold yellow]{mission.Title}[/]",
+                    MissionStatus.Completed => $"[green strikethrough]{mission.Title}[/]",
+                    _ => mission.Title
+                };
+
+                AnsiConsole.MarkupLine($"  {statusIcon} {titleMarkup}");
+
+                if (mission.Status == MissionStatus.InProgress && !string.IsNullOrWhiteSpace(mission.Description))
+                {
+                    AnsiConsole.MarkupLine($"     [dim italic]{mission.Description}[/]");
+                }
+            }
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("  [dim]無任務[/]");
+        }
+        AnsiConsole.WriteLine();
+
+        // Section 4: Overall Statistics
+        AnsiConsole.MarkupLine("[bold cyan]【總體統計】[/]");
+        AnsiConsole.MarkupLine($"總任務進度：{progressData.CompletedMissions}/{progressData.TotalMissions} ([yellow]{progressData.OverallProgress}%[/])");
+
+        if (progressData.CurrentChapterMissions?.Count > 0)
+        {
+            var inProgress = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.InProgress);
+            var locked = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.Locked);
+            var completed = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.Completed);
+
+            AnsiConsole.MarkupLine($"[dim]進行中: {inProgress} | 已完成: {completed} | 未解鎖: {locked}[/]");
+        }
+    }
+
+    private static void WaitForQuitKey()
+    {
+        while (true)
+        {
+            var key = Console.ReadKey(intercept: true);
+            if (key.Key == ConsoleKey.Q || key.Key == ConsoleKey.Escape)
+            {
+                break;
+            }
+        }
     }
 
     private void DisplayCommands()
@@ -425,6 +792,27 @@ public sealed class SpectreConsoleGame
 
         grid.AddEmptyRow();
 
+        // Story and Progress commands
+        grid.AddRow(
+            "[bold underline cyan]劇情與進度[/]",
+            "",
+            ""
+        );
+
+        grid.AddRow(
+            new Markup("[cyan]/host <角色>[/]\n" +
+                      "  選擇故事宿主\n\n" +
+                      "[cyan]/story[/]\n" +
+                      "  查看故事狀態"),
+            new Markup("[cyan]/progress[/] [dim]([/][dim cyan]/p[/][dim])[/]\n" +
+                      "  查看進度摘要\n\n" +
+                      "[cyan]/progress detail[/] [dim]([/][dim cyan]/pd[/][dim])[/]\n" +
+                      "  查看詳細任務列表"),
+            new Markup("")
+        );
+
+        grid.AddEmptyRow();
+
         // System commands section
         grid.AddRow(
             "[bold underline cyan]系統指令[/]",
@@ -447,6 +835,8 @@ public sealed class SpectreConsoleGame
                       "  狀態 → /status\n" +
                       "  地圖 → /map\n" +
                       "  物品 → /inventory\n" +
+                      "  進度 → /progress\n" +
+                      "  進度詳情 → /pd\n" +
                       "  離開 → /quit")
         );
 
@@ -461,5 +851,53 @@ public sealed class SpectreConsoleGame
         AnsiConsole.Write(panel);
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine("[dim]提示：使用 /help 或 /h 查看快速指令參考[/]");
+    }
+
+    private void DisplayHelp()
+    {
+        // Display concise quick reference
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("[bold yellow]快速指令參考[/]");
+        AnsiConsole.WriteLine();
+
+        // Essential commands only - the bare minimum to play
+        AnsiConsole.MarkupLine("  [cyan]/look[/]   ([dim]l[/])    - 查看周圍");
+        AnsiConsole.MarkupLine("  [cyan]/go[/]     ([dim]g[/])    - 前往地點");
+        AnsiConsole.MarkupLine("  [cyan]/examine[/]([dim]x[/])    - 檢查目標");
+        AnsiConsole.MarkupLine("  [cyan]/progress[/]([dim]p[/])   - 查看進度");
+        AnsiConsole.MarkupLine("  [cyan]/help[/]   ([dim]h[/])    - 顯示此參考");
+        AnsiConsole.MarkupLine("  [cyan]/quit[/]   ([dim]q[/])    - 離開遊戲");
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("[dim]提示：輸入 [bold]/commands[/] 查看完整指令列表與詳細說明[/]");
+        AnsiConsole.MarkupLine("[dim]      中文快捷：看、去、檢查、進度、離開[/]");
+    }
+
+    private static string ConvertChineseShortcut(string input)
+    {
+        // Convert Chinese commands to their /command equivalents
+        // Handle both standalone commands and commands with arguments
+        if (input.StartsWith("去"))
+        {
+            return input.Length > 1 ? $"/go{input[1..]}" : "/go";
+        }
+        if (input.StartsWith("說"))
+        {
+            return input.Length > 1 ? $"/say{input[1..]}" : "/say";
+        }
+        if (input.StartsWith("檢查"))
+        {
+            return input.Length > 2 ? $"/examine{input[2..]}" : "/examine";
+        }
+        if (input.Equals("離開"))
+        {
+            return "/quit";
+        }
+        if (input.Equals("進度"))
+        {
+            return "/progress";
+        }
+
+        return input;
     }
 }

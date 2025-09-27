@@ -40,9 +40,9 @@ public sealed class HostCommandHandler : ICommandHandler
     }
 }
 
-public sealed class StoryStatusCommandHandler : ICommandHandler
+public sealed class ProgressCommandHandler : ICommandHandler
 {
-    public string Command => "story";
+    public string Command => "progress";
 
     public CommandResult Handle(CommandContext context, string arguments)
     {
@@ -51,7 +51,7 @@ public sealed class StoryStatusCommandHandler : ICommandHandler
             return CommandResult.FromMessage("目前尚未載入劇情模組。");
         }
 
-        var status = context.Story.DescribeStatus();
-        return CommandResult.FromMessage(status);
+        var progress = context.Story.DescribeProgress();
+        return CommandResult.FromMessage(progress);
     }
 }

@@ -37,6 +37,7 @@ public sealed class CommandRouter
         _aliases["ex"] = "examine";
         _aliases["q"] = "quit";
         _aliases["cmd"] = "commands";
+        _aliases["p"] = "progress";
 
         // Chinese shortcuts
         _aliases["看"] = "look";
@@ -46,6 +47,7 @@ public sealed class CommandRouter
         _aliases["地圖"] = "map";
         _aliases["物品"] = "inventory";
         _aliases["離開"] = "quit";
+        _aliases["進度"] = "progress";
     }
 
     public CommandResult Dispatch(string commandText, CommandContext context)
