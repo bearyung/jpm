@@ -388,13 +388,8 @@ internal sealed class ConsoleInputHandler
         // Get current cursor position for clearing
         var currentPos = Console.GetCursorPosition();
 
-        // Calculate how much to clear using rune enumeration for proper surrogate pair handling
-        var textAfterCursor = _buffer.GetTextAfterCursor();
-        var widthToClear = 0;
-        foreach (var rune in textAfterCursor.EnumerateRunes())
-        {
-            widthToClear += GetDisplayWidth(rune);
-        }
+        // Use buffer's display width knowledge for accurate width calculation
+        var widthToClear = _buffer.GetDisplayWidthAfterCursor();
 
         // Clear from cursor to end
         if (widthToClear > 0)
@@ -435,13 +430,8 @@ internal sealed class ConsoleInputHandler
         var newText = lastIndex >= 0 ? text.Substring(0, lastIndex + 1) : string.Empty;
         var afterText = _buffer.GetTextAfterCursor();
 
-        // Calculate width to clear using proper rune enumeration
-        var deletedText = text.Substring(newText.Length);
-        var deletedWidth = 0;
-        foreach (var rune in deletedText.EnumerateRunes())
-        {
-            deletedWidth += GetDisplayWidth(rune);
-        }
+        // Get the width to clear before modifying the buffer
+        var widthBeforeCursor = _buffer.GetDisplayWidthBeforeCursor();
 
         // Update buffer and restore cursor position correctly
         _buffer.TryDrain(out _);
@@ -467,6 +457,10 @@ internal sealed class ConsoleInputHandler
         {
             _buffer.MoveCursorLeft(out _);
         }
+
+        // Calculate deleted width using buffer's display width knowledge
+        var widthAfterDeletion = _buffer.GetDisplayWidthBeforeCursor();
+        var deletedWidth = widthBeforeCursor - widthAfterDeletion;
 
         // Redraw
         var currentPos = Console.GetCursorPosition();
