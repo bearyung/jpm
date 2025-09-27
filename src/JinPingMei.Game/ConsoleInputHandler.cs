@@ -318,21 +318,23 @@ internal sealed class ConsoleInputHandler
 
     private void ReplaceCurrentLine(string newText)
     {
-        // Clear current line
+        // Get current display width BEFORE clearing the buffer
+        var currentLength = _buffer.GetDisplayWidth();
+
+        // Clear current line on screen
         var currentPos = Console.GetCursorPosition();
         Console.SetCursorPosition(_promptDisplayWidth, currentPos.Top);
-        var currentLength = _buffer.GetDisplayWidth();
-        Console.Write(new string(' ', currentLength));
-        Console.SetCursorPosition(_promptDisplayWidth, currentPos.Top);
+        if (currentLength > 0)
+        {
+            Console.Write(new string(' ', currentLength));
+            Console.SetCursorPosition(_promptDisplayWidth, currentPos.Top);
+        }
 
         // Clear buffer and add new text
         _buffer.TryDrain(out _);
-        foreach (var c in newText)
+        foreach (var rune in newText.EnumerateRunes())
         {
-            if (System.Text.Rune.TryCreate(c, out var rune))
-            {
-                _buffer.Append(rune);
-            }
+            _buffer.Append(rune);
         }
 
         // Display new text
@@ -346,12 +348,9 @@ internal sealed class ConsoleInputHandler
 
         // Clear buffer and add only the text after cursor
         _buffer.TryDrain(out _);
-        foreach (var c in afterText)
+        foreach (var rune in afterText.EnumerateRunes())
         {
-            if (System.Text.Rune.TryCreate(c, out var rune))
-            {
-                _buffer.Append(rune);
-            }
+            _buffer.Append(rune);
         }
         _buffer.MoveCursorToStart();
 
@@ -378,15 +377,12 @@ internal sealed class ConsoleInputHandler
         // Get current cursor position for clearing
         var currentPos = Console.GetCursorPosition();
 
-        // Calculate how much to clear
+        // Calculate how much to clear using rune enumeration for proper surrogate pair handling
         var textAfterCursor = _buffer.GetTextAfterCursor();
         var widthToClear = 0;
-        foreach (var c in textAfterCursor)
+        foreach (var rune in textAfterCursor.EnumerateRunes())
         {
-            if (System.Text.Rune.TryCreate(c, out var rune))
-            {
-                widthToClear += GetDisplayWidth(rune);
-            }
+            widthToClear += GetDisplayWidth(rune);
         }
 
         // Clear from cursor to end
@@ -398,12 +394,9 @@ internal sealed class ConsoleInputHandler
 
         // Update buffer
         _buffer.TryDrain(out _);
-        foreach (var c in beforeText)
+        foreach (var rune in beforeText.EnumerateRunes())
         {
-            if (System.Text.Rune.TryCreate(c, out var rune))
-            {
-                _buffer.Append(rune);
-            }
+            _buffer.Append(rune);
         }
     }
 
@@ -431,38 +424,30 @@ internal sealed class ConsoleInputHandler
         var newText = lastIndex >= 0 ? text.Substring(0, lastIndex + 1) : string.Empty;
         var afterText = _buffer.GetTextAfterCursor();
 
-        // Calculate width to clear
+        // Calculate width to clear using proper rune enumeration
+        var deletedText = text.Substring(newText.Length);
         var deletedWidth = 0;
-        for (int i = newText.Length; i < text.Length; i++)
+        foreach (var rune in deletedText.EnumerateRunes())
         {
-            if (System.Text.Rune.TryCreate(text[i], out var rune))
-            {
-                deletedWidth += GetDisplayWidth(rune);
-            }
+            deletedWidth += GetDisplayWidth(rune);
         }
 
         // Update buffer and restore cursor position correctly
         _buffer.TryDrain(out _);
 
         // First add the kept prefix
-        foreach (var c in newText)
+        foreach (var rune in newText.EnumerateRunes())
         {
-            if (System.Text.Rune.TryCreate(c, out var rune))
-            {
-                _buffer.Append(rune);
-            }
+            _buffer.Append(rune);
         }
 
         // Remember where cursor should be (at end of newText)
         var cursorPosition = _buffer.CursorPosition;
 
         // Then add the text after cursor
-        foreach (var c in afterText)
+        foreach (var rune in afterText.EnumerateRunes())
         {
-            if (System.Text.Rune.TryCreate(c, out var rune))
-            {
-                _buffer.Append(rune);
-            }
+            _buffer.Append(rune);
         }
 
         // Move cursor back to the correct position (end of newText)
