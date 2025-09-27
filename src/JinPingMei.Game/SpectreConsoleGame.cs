@@ -264,62 +264,50 @@ public sealed class SpectreConsoleGame
     private void DisplayLook()
     {
         var snapshot = _gameSession.GetCurrentSceneSnapshot();
-        var content = new StringBuilder();
 
         // Scene header with location
-        content.AppendLine($"[bold cyan]{snapshot.SceneName}[/]");
-        content.AppendLine($"[dim]{snapshot.LocaleName} • {snapshot.LocaleSummary}[/]");
-        content.AppendLine();
+        AnsiConsole.MarkupLine($"[bold cyan]{snapshot.SceneName}[/]");
+        AnsiConsole.MarkupLine($"[dim]{snapshot.LocaleName} • {snapshot.LocaleSummary}[/]");
+        AnsiConsole.WriteLine();
 
         // Scene description
-        content.AppendLine("[bold]場景描述[/]");
-        content.AppendLine(snapshot.SceneDescription);
-        content.AppendLine();
+        AnsiConsole.MarkupLine("[bold]場景描述[/]");
+        AnsiConsole.WriteLine(snapshot.SceneDescription);
+        AnsiConsole.WriteLine();
 
         // NPCs present
-        content.AppendLine("[bold]在場人物[/]");
+        AnsiConsole.MarkupLine("[bold]在場人物[/]");
         if (snapshot.NpcNames.Count == 0)
         {
-            content.AppendLine("[dim]  這裡沒有其他人[/]");
+            AnsiConsole.MarkupLine("[dim]  這裡沒有其他人[/]");
         }
         else
         {
             foreach (var npc in snapshot.NpcNames)
             {
-                content.AppendLine($"  [yellow]•[/] {npc}");
+                AnsiConsole.MarkupLine($"  [yellow]•[/] {npc}");
             }
         }
-        content.AppendLine();
+        AnsiConsole.WriteLine();
 
         // Available exits
-        content.AppendLine("[bold]可前往[/]");
+        AnsiConsole.MarkupLine("[bold]可前往[/]");
         if (snapshot.Exits.Count == 0)
         {
-            content.AppendLine("[dim]  沒有明顯的出口[/]");
+            AnsiConsole.MarkupLine("[dim]  沒有明顯的出口[/]");
         }
         else
         {
             foreach (var exit in snapshot.Exits)
             {
-                content.Append($"  [green]→[/] {exit.DisplayName}");
+                var exitLine = $"  [green]→[/] {exit.DisplayName}";
                 if (!string.IsNullOrWhiteSpace(exit.Description))
                 {
-                    content.Append($" [dim]({exit.Description})[/]");
+                    exitLine += $" [dim]({exit.Description})[/]";
                 }
-                content.AppendLine();
+                AnsiConsole.MarkupLine(exitLine);
             }
         }
-
-        // Create and display a Spectre.Console panel
-        var panel = new Panel(content.ToString().TrimEnd())
-        {
-            Header = new PanelHeader("環境觀察"),
-            Border = BoxBorder.Rounded,
-            Padding = new Padding(1, 0),
-            Expand = false
-        };
-
-        AnsiConsole.Write(panel);
     }
 
     private void DisplayStatus()
