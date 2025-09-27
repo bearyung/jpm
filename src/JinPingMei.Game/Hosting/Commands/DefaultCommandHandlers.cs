@@ -87,7 +87,8 @@ public sealed class ExamineCommandHandler : ICommandHandler
     {
         if (string.IsNullOrWhiteSpace(arguments))
         {
-            return CommandResult.FromMessage(context.Localize("commands.examine.prompt"));
+            // Return special marker for SpectreConsoleGame to show SelectionPrompt
+            return CommandResult.FromMessage("[EXAMINE_SELECT_DISPLAY]");
         }
 
         var normalized = arguments.Trim();

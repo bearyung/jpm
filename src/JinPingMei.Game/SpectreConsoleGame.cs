@@ -254,6 +254,12 @@ public sealed class SpectreConsoleGame
                     needsPromptSpacing = true;
                     continue;
                 }
+                else if (commandResult.Lines[0] == "[EXAMINE_SELECT_DISPLAY]")
+                {
+                    HandleExamineSelection();
+                    needsPromptSpacing = true;
+                    continue;
+                }
             }
 
             // Display response (skip special display markers)
@@ -472,9 +478,9 @@ public sealed class SpectreConsoleGame
             .PageSize(5)
             .MoreChoicesText("[dim](使用上下方向鍵移動，Enter 選擇)[/]");
 
-        // Add options with clear visual distinction
-        prompt.AddChoice("[red]是的，離開遊戲[/]");
+        // Add options with "No" as default (first choice)
         prompt.AddChoice("[green]不，繼續遊戲[/]");
+        prompt.AddChoice("[red]是的，離開遊戲[/]");
 
         // Show the prompt and get selection
         var selection = AnsiConsole.Prompt(prompt);
@@ -490,6 +496,76 @@ public sealed class SpectreConsoleGame
         {
             AnsiConsole.MarkupLine("[dim]已取消離開。[/]");
             return false; // Cancel quit
+        }
+    }
+
+    private void HandleExamineSelection()
+    {
+        var snapshot = _gameSession.GetCurrentSceneSnapshot();
+
+        // Create selection prompt for examination targets
+        var prompt = new SelectionPrompt<string>()
+            .Title("[bold cyan]請選擇要檢查的目標：[/]")
+            .PageSize(10)
+            .MoreChoicesText("[dim](使用上下方向鍵移動，Enter 選擇)[/]");
+
+        // Add cancel option first
+        prompt.AddChoice("[red]取消[/]");
+
+        // Add option to examine the scene itself
+        prompt.AddChoice("[cyan]當前環境[/] [dim](場景描述)[/]");
+
+        // Add each NPC as a choice
+        if (snapshot.NpcNames.Count > 0)
+        {
+            foreach (var npc in snapshot.NpcNames)
+            {
+                prompt.AddChoice($"[yellow]{npc}[/] [dim](人物)[/]");
+            }
+        }
+
+        // Show the prompt and get selection
+        var selection = AnsiConsole.Prompt(prompt);
+
+        // Handle the selection
+        if (selection == "[red]取消[/]")
+        {
+            AnsiConsole.MarkupLine("[dim]已取消檢查。[/]");
+            return;
+        }
+
+        string examineCommand;
+        if (selection.StartsWith("[cyan]當前環境"))
+        {
+            // Examine the scene
+            examineCommand = "/examine 場景";
+        }
+        else
+        {
+            // Extract NPC name (remove markup and description)
+            var npcName = selection;
+
+            // Remove the markup tags and description
+            if (npcName.StartsWith("[yellow]"))
+            {
+                npcName = npcName.Substring(8); // Remove "[yellow]"
+                var endIndex = npcName.IndexOf("[/]");
+                if (endIndex > 0)
+                {
+                    npcName = npcName.Substring(0, endIndex);
+                }
+            }
+
+            examineCommand = $"/examine {npcName}";
+        }
+
+        // Execute the examine command
+        var commandResult = _gameSession.HandleInput(examineCommand);
+
+        // Display the result
+        foreach (var line in commandResult.Lines)
+        {
+            AnsiConsole.WriteLine(line);
         }
     }
 
@@ -779,64 +855,22 @@ public sealed class SpectreConsoleGame
 
     private void DisplayHelp()
     {
-        // Display CLI-style help in a format similar to Unix man pages
+        // Display concise quick reference
         AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine("[bold underline]JINGPINGMEI(1)[/]                    User Commands                    [bold underline]JINGPINGMEI(1)[/]");
-        AnsiConsole.WriteLine();
-
-        AnsiConsole.MarkupLine("[bold]NAME[/]");
-        AnsiConsole.MarkupLine("       金瓶梅 - 互動式文字冒險遊戲");
+        AnsiConsole.MarkupLine("[bold yellow]快速指令參考[/]");
         AnsiConsole.WriteLine();
 
-        AnsiConsole.MarkupLine("[bold]SYNOPSIS[/]");
-        AnsiConsole.MarkupLine("       [cyan]/command[/] [dim][[options]][/] [dim][[arguments]][/]");
+        // Essential commands only - the bare minimum to play
+        AnsiConsole.MarkupLine("  [cyan]/look[/]   ([dim]l[/])    - 查看周圍");
+        AnsiConsole.MarkupLine("  [cyan]/go[/]     ([dim]g[/])    - 前往地點");
+        AnsiConsole.MarkupLine("  [cyan]/examine[/]([dim]x[/])    - 檢查目標");
+        AnsiConsole.MarkupLine("  [cyan]/progress[/]([dim]p[/])   - 查看進度");
+        AnsiConsole.MarkupLine("  [cyan]/help[/]   ([dim]h[/])    - 顯示此參考");
+        AnsiConsole.MarkupLine("  [cyan]/quit[/]   ([dim]q[/])    - 離開遊戲");
         AnsiConsole.WriteLine();
 
-        AnsiConsole.MarkupLine("[bold]DESCRIPTION[/]");
-        AnsiConsole.MarkupLine("       在明朝清河城中體驗經典故事，透過指令進行遊戲。");
-        AnsiConsole.WriteLine();
-
-        AnsiConsole.MarkupLine("[bold]ESSENTIAL COMMANDS[/]");
-
-        // Create a table for commands with better alignment
-        var table = new Table()
-            .Border(TableBorder.None)
-            .HideHeaders()
-            .AddColumn(new TableColumn("Command").Width(20))
-            .AddColumn(new TableColumn("Alias").Width(15))
-            .AddColumn(new TableColumn("Description"));
-
-        table.AddRow("[cyan]/look[/]", "[dim]l, 看[/]", "查看周圍環境");
-        table.AddRow("[cyan]/go[/] [dim]<location>[/]", "[dim]g, 去[/]", "前往指定地點（無參數時顯示選單）");
-        table.AddRow("[cyan]/status[/]", "[dim]s, 狀態[/]", "查看玩家狀態");
-        table.AddRow("[cyan]/map[/]", "[dim]m, 地圖[/]", "顯示地圖與可用出口");
-        table.AddRow("[cyan]/inventory[/]", "[dim]i, inv, 物品[/]", "查看物品欄");
-        table.AddRow("[cyan]/say[/] [dim]<text>[/]", "[dim]說[/]", "說出對話");
-        table.AddRow("[cyan]/examine[/] [dim]<target>[/]", "[dim]x, 檢查[/]", "仔細檢查目標");
-        table.AddEmptyRow();
-        table.AddRow("[cyan]/host[/] [dim]<character>[/]", "[dim]宿主[/]", "選擇故事宿主角色");
-        table.AddRow("[cyan]/progress[/]", "[dim]p, 進度[/]", "顯示進度摘要");
-        table.AddRow("[cyan]/progress detail[/]", "[dim]pd, 進度詳情[/]", "顯示詳細任務列表");
-        table.AddEmptyRow();
-        table.AddRow("[cyan]/commands[/]", "[dim]cmd[/]", "顯示完整指令分類");
-        table.AddRow("[cyan]/help[/]", "[dim]h, ?[/]", "顯示此說明");
-        table.AddRow("[cyan]/quit[/]", "[dim]q, 離開[/]", "離開遊戲");
-
-        AnsiConsole.Write(table);
-        AnsiConsole.WriteLine();
-
-        AnsiConsole.MarkupLine("[bold]EXAMPLES[/]");
-        AnsiConsole.MarkupLine("       [cyan]/go[/]          # 顯示可前往地點的選單");
-        AnsiConsole.MarkupLine("       [cyan]/go 西廂房[/]   # 直接前往西廂房");
-        AnsiConsole.MarkupLine("       [cyan]/pd[/]          # 查看當前章節的任務進度");
-        AnsiConsole.MarkupLine("       [cyan]去[/]            # 中文快捷，等同於 /go");
-        AnsiConsole.WriteLine();
-
-        AnsiConsole.MarkupLine("[bold]SEE ALSO[/]");
-        AnsiConsole.MarkupLine("       輸入 [cyan]/commands[/] 查看按類別組織的完整指令說明");
-        AnsiConsole.WriteLine();
-
-        AnsiConsole.MarkupLine("[dim]Jin Ping Mei Game v1.0                     2024                    JINGPINGMEI(1)[/]");
+        AnsiConsole.MarkupLine("[dim]提示：輸入 [bold]/commands[/] 查看完整指令列表與詳細說明[/]");
+        AnsiConsole.MarkupLine("[dim]      中文快捷：看、去、檢查、進度、離開[/]");
     }
 
     private static string ConvertChineseShortcut(string input)
@@ -850,6 +884,10 @@ public sealed class SpectreConsoleGame
         if (input.StartsWith("說"))
         {
             return input.Length > 1 ? $"/say{input[1..]}" : "/say";
+        }
+        if (input.StartsWith("檢查"))
+        {
+            return input.Length > 2 ? $"/examine{input[2..]}" : "/examine";
         }
         if (input.Equals("離開"))
         {
