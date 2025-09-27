@@ -245,6 +245,15 @@ public sealed class SpectreConsoleGame
                     needsPromptSpacing = true;
                     continue;
                 }
+                else if (commandResult.Lines[0] == "[QUIT_CONFIRM_DISPLAY]")
+                {
+                    if (HandleQuitConfirmation())
+                    {
+                        break; // Exit the game loop
+                    }
+                    needsPromptSpacing = true;
+                    continue;
+                }
             }
 
             // Display response (skip special display markers)
@@ -452,6 +461,35 @@ public sealed class SpectreConsoleGame
         foreach (var line in commandResult.Lines)
         {
             AnsiConsole.WriteLine(line);
+        }
+    }
+
+    private bool HandleQuitConfirmation()
+    {
+        // Create confirmation prompt
+        var prompt = new SelectionPrompt<string>()
+            .Title("[bold yellow]確定要離開遊戲嗎？[/]")
+            .PageSize(5)
+            .MoreChoicesText("[dim](使用上下方向鍵移動，Enter 選擇)[/]");
+
+        // Add options with clear visual distinction
+        prompt.AddChoice("[red]是的，離開遊戲[/]");
+        prompt.AddChoice("[green]不，繼續遊戲[/]");
+
+        // Show the prompt and get selection
+        var selection = AnsiConsole.Prompt(prompt);
+
+        // Handle the selection
+        if (selection == "[red]是的，離開遊戲[/]")
+        {
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("[yellow]感謝遊玩，再見！[/]");
+            return true; // Confirm quit
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("[dim]已取消離開。[/]");
+            return false; // Cancel quit
         }
     }
 
