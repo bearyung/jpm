@@ -69,8 +69,40 @@ public sealed class SpectreConsoleGame
 
     private void DisplayWelcome()
     {
-        AnsiConsole.WriteLine(_gameSession.RenderIntro());
-        AnsiConsole.WriteLine();
+        var introSequence = _gameSession.GetIntroSequence();
+        if (introSequence.Steps.Count > 0)
+        {
+            for (var index = 0; index < introSequence.Steps.Count; index++)
+            {
+                var step = introSequence.Steps[index];
+
+                foreach (var line in step)
+                {
+                    AnsiConsole.WriteLine(line);
+                }
+
+                var isLastStep = index == introSequence.Steps.Count - 1;
+                if (!isLastStep)
+                {
+                    AnsiConsole.Markup("[dim]（按 Enter 繼續）[/]");
+                    Console.ReadLine();
+                    AnsiConsole.WriteLine();
+                }
+                else
+                {
+                    AnsiConsole.WriteLine();
+                }
+            }
+        }
+        else
+        {
+            var fallback = _gameSession.RenderIntro();
+            if (!string.IsNullOrWhiteSpace(fallback))
+            {
+                AnsiConsole.WriteLine(fallback);
+                AnsiConsole.WriteLine();
+            }
+        }
 
         // Display a subtle hint
         AnsiConsole.MarkupLine("[dim]提示：輸入 [bold]/help[/] 查看所有指令，或 [bold]/commands[/] 查看指令分類[/]");
@@ -329,9 +361,7 @@ public sealed class SpectreConsoleGame
 
     private void DisplayStatus()
     {
-        var playerName = _gameSession.State.HasPlayerName
-            ? _gameSession.State.PlayerName
-            : "旅人";
+        var playerName = _gameSession.State.PlayerName ?? "旅人";
 
         var snapshot = _gameSession.GetCurrentSceneSnapshot();
 

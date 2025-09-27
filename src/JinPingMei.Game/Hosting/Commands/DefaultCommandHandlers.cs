@@ -179,7 +179,7 @@ public sealed class QuitCommandHandler : ICommandHandler
     public CommandResult Handle(CommandContext context, string arguments)
     {
         // Return special marker for SpectreConsoleGame to show confirmation prompt
-        return CommandResult.FromMessage("[QUIT_CONFIRM_DISPLAY]");
+        return CommandResult.FromMessage("[QUIT_CONFIRM_DISPLAY]", shouldDisconnect: true);
     }
 }
 

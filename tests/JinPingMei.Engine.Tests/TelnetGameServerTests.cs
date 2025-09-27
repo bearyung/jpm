@@ -68,7 +68,7 @@ public class TelnetGameServerTests
 
         await ReadIntroAsync(reader);
 
-        var timeoutLine = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(2));
+        var timeoutLine = await ReadNextNonEmptyLineAsync(reader, TimeSpan.FromSeconds(2));
 
         Assert.Contains(options.InactivityMessage, timeoutLine ?? string.Empty);
         Assert.Equal(1, _metrics.InactivityTimeouts);
@@ -97,7 +97,7 @@ public class TelnetGameServerTests
 
         await ReadIntroAsync(reader);
 
-        var heartbeatLine = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(1));
+        var heartbeatLine = await ReadNextNonEmptyLineAsync(reader, TimeSpan.FromSeconds(1));
         Assert.Contains(options.HeartbeatMessage, heartbeatLine ?? string.Empty);
 
         cts.Cancel();
@@ -126,8 +126,8 @@ public class TelnetGameServerTests
         await ReadIntroAsync(reader);
 
         await writer.WriteLineAsync("/help");
-        var helpLine1 = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(1));
-        var helpLine2 = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(1));
+        var helpLine1 = await ReadNextNonEmptyLineAsync(reader, TimeSpan.FromSeconds(1));
+        var helpLine2 = await ReadNextNonEmptyLineAsync(reader, TimeSpan.FromSeconds(1));
 
         Assert.Contains("/help", helpLine1 ?? string.Empty);
         Assert.False(string.IsNullOrWhiteSpace(helpLine2));
@@ -135,15 +135,10 @@ public class TelnetGameServerTests
         string? lifetimeLine = null;
         for (var attempt = 0; attempt < 5; attempt++)
         {
-            var line = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(2));
+            var line = await ReadNextNonEmptyLineAsync(reader, TimeSpan.FromSeconds(2));
             if (line is null)
             {
                 break;
-            }
-
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                continue;
             }
 
             lifetimeLine = line;
@@ -213,9 +208,44 @@ public class TelnetGameServerTests
 
     private static async Task ReadIntroAsync(StreamReader reader)
     {
-        for (var i = 0; i < 5; i++)
+        while (true)
         {
-            await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(2));
+            var line = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(2));
+            if (line is null)
+            {
+                break;
+            }
+
+            if (line.Contains("/help", StringComparison.Ordinal) && !line.Contains("'", StringComparison.Ordinal))
+            {
+                break;
+            }
+        }
+    }
+
+    private static async Task<string?> ReadNextNonEmptyLineAsync(StreamReader reader, TimeSpan timeout)
+    {
+        while (true)
+        {
+            string? line;
+            try
+            {
+                line = await reader.ReadLineAsync().WaitAsync(timeout);
+            }
+            catch (TimeoutException)
+            {
+                return null;
+            }
+
+            if (line is null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(line))
+            {
+                return line;
+            }
         }
     }
 

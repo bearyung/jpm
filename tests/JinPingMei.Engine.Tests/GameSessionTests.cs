@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using JinPingMei.Game.Hosting;
+using JinPingMei.Game.Hosting.Commands;
 using JinPingMei.Game.Localization;
 using JinPingMei.Engine;
 
@@ -55,6 +56,27 @@ public class GameSessionTests
     }
 
     [Fact]
+    public void HandleInput_CommandWithoutSlash_ResolvesToHandler()
+    {
+        var session = CreateSession();
+
+        var result = session.HandleInput("look");
+
+        Assert.Single(result.Lines);
+        Assert.Equal("[LOOK_DISPLAY]", result.Lines[0]);
+    }
+
+    [Fact]
+    public void HandleInput_BlankWithoutHost_ReturnsEmpty()
+    {
+        var session = CreateSession();
+
+        var result = session.HandleInput(string.Empty);
+
+        Assert.Same(CommandResult.Empty, result);
+    }
+
+    [Fact]
     public void HandleInput_FreeText_ProducesPlaceholderNarration()
     {
         var session = CreateSession();
@@ -65,6 +87,16 @@ public class GameSessionTests
 
         Assert.NotEmpty(result.Lines);
         Assert.Contains(result.Lines, line => line.Contains("詞曲與亂世開場"));
+    }
+
+    [Fact]
+    public void HandleInput_FreeTextWithoutHost_ReturnsHostReminder()
+    {
+        var session = CreateSession();
+
+        var result = session.HandleInput("我望向窗外的月色。");
+
+        Assert.Contains("請先使用 /host", result.Lines.Single());
     }
 
     [Fact]
@@ -81,6 +113,17 @@ public class GameSessionTests
     public void HandleInput_UnknownCommand_ReturnsLocalizedMessage()
     {
         var session = CreateSession();
+
+        var result = session.HandleInput("/dance");
+
+        Assert.Contains("無法識別", result.Lines.Single());
+    }
+
+    [Fact]
+    public void HandleInput_UnknownSlashCommandAfterHost_ReturnsLocalizedMessage()
+    {
+        var session = CreateSession();
+        session.HandleInput("/host 武松");
 
         var result = session.HandleInput("/dance");
 

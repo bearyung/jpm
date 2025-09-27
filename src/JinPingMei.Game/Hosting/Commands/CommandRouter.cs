@@ -50,7 +50,7 @@ public sealed class CommandRouter
         _aliases["進度"] = "progress";
     }
 
-    public CommandResult Dispatch(string commandText, CommandContext context)
+    public bool TryDispatch(string commandText, CommandContext context, out CommandResult result)
     {
         if (context is null)
         {
@@ -60,7 +60,8 @@ public sealed class CommandRouter
         var trimmed = commandText.Trim();
         if (string.IsNullOrEmpty(trimmed))
         {
-            return CommandResult.FromMessage(context.Localize("commands.invalid"));
+            result = CommandResult.FromMessage(context.Localize("commands.invalid"));
+            return true;
         }
 
         var separatorIndex = trimmed.IndexOf(' ');
@@ -75,10 +76,18 @@ public sealed class CommandRouter
 
         if (_handlers.TryGetValue(commandName, out var handler))
         {
-            return handler.Handle(context, arguments);
+            result = handler.Handle(context, arguments);
+            return true;
         }
 
-        return CommandResult.FromMessage(context.Localize("commands.unknown"));
+        result = CommandResult.FromMessage(context.Localize("commands.unknown"));
+        return false;
+    }
+
+    public CommandResult Dispatch(string commandText, CommandContext context)
+    {
+        TryDispatch(commandText, context, out var result);
+        return result;
     }
 
     public static CommandRouter CreateDefault(ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics, IEnumerable<ICommandHandler>? additionalHandlers = null)
