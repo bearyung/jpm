@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JinPingMei.AI;
 using JinPingMei.Engine;
 using JinPingMei.Engine.World;
 using JinPingMei.Game.Hosting.Commands;
@@ -60,6 +61,11 @@ public sealed class GameSession
         return _runtime.RenderIntro();
     }
 
+    public IntroSequence GetIntroSequence()
+    {
+        return _runtime.GetIntroSequence();
+    }
+
     public string GetCommandHint()
     {
         return _localization.GetString(_state.Locale, "session.commands.hint");
@@ -86,13 +92,28 @@ public sealed class GameSession
     {
         if (string.IsNullOrWhiteSpace(input))
         {
-            return HandleStoryInteraction();
+            return _state.HasStoryHost
+                ? HandleStoryInteraction()
+                : CommandResult.Empty;
         }
 
-        if (IsCommand(input))
+        var trimmed = input.Trim();
+        var isSlashCommand = trimmed.Length > 0 && trimmed[0] == '/';
+        var sanitized = isSlashCommand ? trimmed[1..] : trimmed;
+
+        if (_commandRouter.TryDispatch(sanitized, _commandContext, out var commandResult))
         {
-            var commandBody = input[1..];
-            return _commandRouter.Dispatch(commandBody, _commandContext);
+            return commandResult;
+        }
+
+        if (isSlashCommand)
+        {
+            return commandResult;
+        }
+
+        if (!_state.HasStoryHost)
+        {
+            return HandleStoryInteraction();
         }
 
         return HandleStoryInteraction();
@@ -128,11 +149,6 @@ public sealed class GameSession
         }
 
         return handlers;
-    }
-
-    private static bool IsCommand(string input)
-    {
-        return input.Length > 0 && input[0] == '/';
     }
 }
 

@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text;
 using JinPingMei.AI;
 using JinPingMei.Content;
 using JinPingMei.Engine.World;
@@ -28,9 +29,32 @@ public sealed class GameRuntime
         return new GameRuntime(director, worldNavigator, storyRepository);
     }
 
-    public string RenderIntro()
+    public IntroSequence GetIntroSequence()
     {
         return _director.BuildIntroductoryScene();
+    }
+
+    public string RenderIntro()
+    {
+        var sequence = GetIntroSequence();
+        if (sequence.Steps.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var builder = new StringBuilder();
+
+        foreach (var step in sequence.Steps)
+        {
+            foreach (var line in step)
+            {
+                builder.AppendLine(line);
+            }
+
+            builder.AppendLine();
+        }
+
+        return builder.ToString().TrimEnd();
     }
 
     public WorldSession CreateWorldSession()
