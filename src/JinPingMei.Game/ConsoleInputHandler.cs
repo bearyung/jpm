@@ -22,8 +22,9 @@ internal sealed class ConsoleInputHandler
     {
         _prompt = prompt;
         // Calculate the actual display width of the prompt (without markup)
+        // Need to account for wide characters (Chinese characters = 2 width)
         var plainPrompt = prompt.RemoveMarkup();
-        _promptDisplayWidth = plainPrompt.Length;
+        _promptDisplayWidth = CalculateStringDisplayWidth(plainPrompt);
         _commandHistory = commandHistory ?? new List<string>();
         _historyIndex = _commandHistory.Count;
     }
@@ -294,6 +295,24 @@ internal sealed class ConsoleInputHandler
         }
 
         return 1;
+    }
+
+    private static int CalculateStringDisplayWidth(string text)
+    {
+        var width = 0;
+        foreach (var c in text)
+        {
+            if (System.Text.Rune.TryCreate(c, out var rune))
+            {
+                width += GetDisplayWidth(rune);
+            }
+            else
+            {
+                // If it fails to create a rune, assume width of 1
+                width += 1;
+            }
+        }
+        return width;
     }
 
     private void ReplaceCurrentLine(string newText)
