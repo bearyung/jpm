@@ -1,0 +1,266 @@
+{
+  "defaultLocaleId": "qinghe",
+  "dialogueSets": [
+    {
+      "id": "madam-teahouse",
+      "npcId": "madam",
+      "localeId": "qinghe",
+      "sceneId": "teahouse",
+      "entries": [
+        {
+          "id": "first-meeting",
+          "priority": 10,
+          "conditions": {
+            "maxInteractionCount": 0
+          },
+          "lines": [
+            "秦媽媽笑容可掬地看著你：",
+            "「哎呀，新面孔！是頭一回來我們會仙樓吧？」",
+            "「要不要先來壺好茶，聽聽王先生說書？」",
+            "",
+            "她靠近了些，壓低聲音：",
+            "「最近城裡頭可熱鬧了，西門大官人又有新的風流事兒傳出來。」",
+            "「不過這些閒話，還是等您坐定了再細說不遲。」"
+          ],
+          "effects": {
+            "setFlags": ["met_madam_qin"]
+          },
+          "repeatable": false
+        },
+        {
+          "id": "regular-greeting",
+          "priority": 5,
+          "conditions": {
+            "requiredFlags": ["met_madam_qin"],
+            "forbiddenFlags": ["knows_ximen_secret"]
+          },
+          "lines": [
+            "秦媽媽認出了你，熱情招呼：",
+            "「客官又來了！今日要聽什麼段子？」",
+            "「王先生正準備說西門慶與潘金蓮的故事呢。」"
+          ]
+        },
+        {
+          "id": "knows-secret",
+          "priority": 8,
+          "conditions": {
+            "requiredFlags": ["met_madam_qin", "knows_ximen_secret"]
+          },
+          "lines": [
+            "秦媽媽意味深長地看著你：",
+            "「看來客官已經知道了些內情。」",
+            "「西門大官人的事，可不是誰都能打聽的。」",
+            "「您若真想深入了解，恐怕得親自去拜訪他府上。」"
+          ]
+        },
+        {
+          "id": "host-wusong",
+          "priority": 15,
+          "conditions": {
+            "requiredHost": "武松"
+          },
+          "lines": [
+            "秦媽媽臉色一變，退了半步：",
+            "「武...武二爺！您怎麼來了？」",
+            "「您哥哥武大最近可好？聽說他媳婦...」",
+            "",
+            "她欲言又止，似乎不敢多說。"
+          ],
+          "effects": {
+            "setFlags": ["madam_fears_wusong"]
+          }
+        },
+        {
+          "id": "host-ximen",
+          "priority": 15,
+          "conditions": {
+            "requiredHost": "西門慶"
+          },
+          "lines": [
+            "秦媽媽眼睛一亮，殷勤上前：",
+            "「西門大官人！許久未見，您可是稀客啊！」",
+            "「樓上雅間已經備好，您的老位置。」",
+            "「要不要叫幾個姑娘來陪酒？」"
+          ],
+          "effects": {
+            "setFlags": ["madam_knows_ximen_well"],
+            "modifyRelationships": { "madam": 10 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "storyteller-teahouse",
+      "npcId": "storyteller",
+      "localeId": "qinghe",
+      "sceneId": "teahouse",
+      "entries": [
+        {
+          "id": "first-meeting",
+          "priority": 10,
+          "conditions": {
+            "maxInteractionCount": 0
+          },
+          "lines": [
+            "王先生放下折扇，清了清嗓子：",
+            "「這位客官面生得很，可是遠道而來？」",
+            "",
+            "「今日要說的，正是西門慶與潘金蓮初遇的故事。」",
+            "「話說那日陽春三月，西門大官人路過王婆茶坊...」",
+            "",
+            "他頓了頓：「若想聽完整段書，還請賞些茶錢。」"
+          ],
+          "effects": {
+            "setFlags": ["met_storyteller_wang"]
+          }
+        },
+        {
+          "id": "story-continues",
+          "priority": 5,
+          "conditions": {
+            "requiredFlags": ["met_storyteller_wang", "paid_storyteller"]
+          },
+          "lines": [
+            "王先生見你給了賞錢，精神一振：",
+            "「多謝客官！我這就說說那王婆的撮合之術。」",
+            "「這王婆啊，有十分精明的算計...」",
+            "",
+            "他滔滔不絕地講述起故事的細節。"
+          ]
+        },
+        {
+          "id": "needs-payment",
+          "priority": 6,
+          "conditions": {
+            "requiredFlags": ["met_storyteller_wang"],
+            "forbiddenFlags": ["paid_storyteller"]
+          },
+          "lines": [
+            "王先生咳嗽了一聲：",
+            "「客官若要聽書，還請先賞些茶錢。」",
+            "「說書也是要養家糊口的。」"
+          ]
+        },
+        {
+          "id": "host-panjinlian",
+          "priority": 15,
+          "conditions": {
+            "requiredHost": "潘金蓮"
+          },
+          "lines": [
+            "王先生一愣，趕緊收起折扇，有些尷尬：",
+            "「潘...潘娘子，您怎麼來了？」",
+            "「小的剛才說的都是戲文，當不得真。」",
+            "",
+            "他額頭冒汗，顯然很是緊張。"
+          ],
+          "effects": {
+            "setFlags": ["storyteller_embarrassed"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "merchant-market",
+      "npcId": "merchant",
+      "localeId": "qinghe",
+      "sceneId": "market",
+      "entries": [
+        {
+          "id": "selling",
+          "priority": 5,
+          "lines": [
+            "商販熱情地招呼你：",
+            "「客官！來看看新到的絲綢，上好的杭州貨！」",
+            "「今日特價，買二送一，過了這村可沒這店了！」"
+          ]
+        },
+        {
+          "id": "knows-gossip",
+          "priority": 7,
+          "conditions": {
+            "requiredFlags": ["asked_about_ximen"]
+          },
+          "lines": [
+            "商販壓低聲音：",
+            "「您打聽西門大官人？他可是這清河城的大人物。」",
+            "「做藥材生意發的家，現在是有錢有勢。」",
+            "「不過他那些風流事...嘿嘿，還是別多說了。」"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "drummer-market",
+      "npcId": "drummer",
+      "localeId": "qinghe",
+      "sceneId": "market",
+      "entries": [
+        {
+          "id": "excited",
+          "priority": 5,
+          "lines": [
+            "鼓童停下敲鼓，興奮地對你說：",
+            "「大哥哥/大姐姐，今晚會仙樓有精彩的說書！」",
+            "「王先生要講西門大官人的故事，可精彩了！」",
+            "「您要是去，記得早點占座，晚了就沒好位置了。」"
+          ]
+        },
+        {
+          "id": "tired",
+          "priority": 3,
+          "conditions": {
+            "timeOfDay": "evening"
+          },
+          "lines": [
+            "鼓童看起來有些疲倦：",
+            "「敲了一天鼓，手都酸了。」",
+            "「不過為了王先生的說書，值得！」"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "episode-steward-hall",
+      "npcId": "episode-steward",
+      "localeId": "qinghe",
+      "sceneId": "episode-01-hall",
+      "entries": [
+        {
+          "id": "introduction",
+          "priority": 10,
+          "conditions": {
+            "maxInteractionCount": 0
+          },
+          "lines": [
+            "司記官恭敬地向你行禮：",
+            "「時間旅人，歡迎來到卷之一策議堂。」",
+            "「您需要完成以下必修任務方可進入下一卷：」",
+            "",
+            "「一、與西門慶建立初步聯繫」",
+            "「二、見證潘金蓮與西門慶的相遇」",
+            "「三、了解王婆的撮合之術」",
+            "",
+            "「任務詳情請查看任務榜。」"
+          ],
+          "effects": {
+            "setFlags": ["met_episode_steward"]
+          }
+        },
+        {
+          "id": "progress-check",
+          "priority": 5,
+          "conditions": {
+            "requiredFlags": ["met_episode_steward"]
+          },
+          "lines": [
+            "司記官查看了一下記錄：",
+            "「時間旅人，您目前的進度是...」",
+            "「還有一些任務需要完成。」",
+            "「請繼續努力。」"
+          ]
+        }
+      ]
+    }
+  ]
+}

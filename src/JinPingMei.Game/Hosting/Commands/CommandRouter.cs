@@ -35,19 +35,11 @@ public sealed class CommandRouter
         _aliases["i"] = "inventory";
         _aliases["inv"] = "inventory";
         _aliases["ex"] = "examine";
+        _aliases["t"] = "talk";
         _aliases["q"] = "quit";
         _aliases["cmd"] = "commands";
         _aliases["p"] = "progress";
 
-        // Chinese shortcuts
-        _aliases["看"] = "look";
-        _aliases["去"] = "go";
-        _aliases["說"] = "say";
-        _aliases["狀態"] = "status";
-        _aliases["地圖"] = "map";
-        _aliases["物品"] = "inventory";
-        _aliases["離開"] = "quit";
-        _aliases["進度"] = "progress";
     }
 
     public bool TryDispatch(string commandText, CommandContext context, out CommandResult result)
@@ -103,6 +95,7 @@ public sealed class CommandRouter
             new LookCommandHandler(),
             new GoCommandHandler(),
             new ExamineCommandHandler(),
+            new TalkCommandHandler(),
             new SayCommandHandler(),
             new StatusCommandHandler(),
             new MapCommandHandler(),
@@ -144,11 +137,12 @@ public sealed class CommandContext
     private readonly ILocalizationProvider _localization;
     private readonly ITelnetServerDiagnostics _diagnostics;
 
-    public CommandContext(SessionState session, WorldSession world, JinPingMei.Engine.Story.StorySession? story, ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics)
+    public CommandContext(SessionState session, WorldSession world, JinPingMei.Engine.Story.StorySession? story, JinPingMei.Engine.GameRuntime runtime, ILocalizationProvider localization, ITelnetServerDiagnostics diagnostics)
     {
         Session = session ?? throw new ArgumentNullException(nameof(session));
         World = world ?? throw new ArgumentNullException(nameof(world));
         Story = story;
+        Runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _diagnostics = diagnostics ?? throw new ArgumentNullException(nameof(diagnostics));
     }
@@ -158,6 +152,8 @@ public sealed class CommandContext
     public WorldSession World { get; }
 
     public JinPingMei.Engine.Story.StorySession? Story { get; }
+
+    public JinPingMei.Engine.GameRuntime Runtime { get; }
 
     public ITelnetServerDiagnostics Diagnostics => _diagnostics;
 
