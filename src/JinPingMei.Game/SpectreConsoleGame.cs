@@ -152,8 +152,7 @@ public sealed class SpectreConsoleGame
 
             // Handle display commands using Spectre.Console components
             if (trimmedInput.Equals("/look", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/l", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("看"))  // Chinese shortcut
+                trimmedInput.Equals("/l", StringComparison.OrdinalIgnoreCase))
             {
                 DisplayLook();
                 needsPromptSpacing = true;
@@ -161,8 +160,7 @@ public sealed class SpectreConsoleGame
             }
 
             if (trimmedInput.Equals("/status", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/s", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("狀態"))  // Chinese shortcut
+                trimmedInput.Equals("/s", StringComparison.OrdinalIgnoreCase))
             {
                 DisplayStatus();
                 needsPromptSpacing = true;
@@ -170,8 +168,7 @@ public sealed class SpectreConsoleGame
             }
 
             if (trimmedInput.Equals("/map", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/m", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("地圖"))  // Chinese shortcut
+                trimmedInput.Equals("/m", StringComparison.OrdinalIgnoreCase))
             {
                 DisplayMap();
                 needsPromptSpacing = true;
@@ -180,8 +177,7 @@ public sealed class SpectreConsoleGame
 
             if (trimmedInput.Equals("/inventory", StringComparison.OrdinalIgnoreCase) ||
                 trimmedInput.Equals("/inv", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/i", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("物品"))  // Chinese shortcut
+                trimmedInput.Equals("/i", StringComparison.OrdinalIgnoreCase))
             {
                 DisplayInventory();
                 needsPromptSpacing = true;
@@ -206,21 +202,18 @@ public sealed class SpectreConsoleGame
             }
 
             if (trimmedInput.Equals("/progress detail", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("/pd", StringComparison.OrdinalIgnoreCase) ||
-                trimmedInput.Equals("進度詳情"))  // Chinese shortcut
+                trimmedInput.Equals("/pd", StringComparison.OrdinalIgnoreCase))
             {
                 DisplayProgressDetail();
                 needsPromptSpacing = true;
                 continue;
             }
 
-            // Convert Chinese shortcuts to their command equivalents
-            var processedInput = ConvertChineseShortcut(trimmedInput);
 
             CommandResult commandResult;
             try
             {
-                commandResult = _gameSession.HandleInput(processedInput);
+                commandResult = _gameSession.HandleInput(trimmedInput);
             }
             catch (Exception ex)
             {
@@ -801,9 +794,7 @@ public sealed class SpectreConsoleGame
 
         grid.AddRow(
             new Markup("[cyan]/host <角色>[/]\n" +
-                      "  選擇故事宿主\n\n" +
-                      "[cyan]/story[/]\n" +
-                      "  查看故事狀態"),
+                      "  選擇故事宿主"),
             new Markup("[cyan]/progress[/] [dim]([/][dim cyan]/p[/][dim])[/]\n" +
                       "  查看進度摘要\n\n" +
                       "[cyan]/progress detail[/] [dim]([/][dim cyan]/pd[/][dim])[/]\n" +
@@ -817,7 +808,7 @@ public sealed class SpectreConsoleGame
         grid.AddRow(
             "[bold underline cyan]系統指令[/]",
             "",
-            "[bold underline cyan]中文快捷[/]"
+            ""
         );
 
         grid.AddRow(
@@ -828,16 +819,7 @@ public sealed class SpectreConsoleGame
                       "[red]/quit[/] [dim]([/][dim red]/q[/][dim])[/]\n" +
                       "  離開遊戲"),
             new Markup(""),
-            new Markup("[dim]支援中文指令：[/]\n" +
-                      "  看 → /look\n" +
-                      "  去 → /go\n" +
-                      "  說 → /say\n" +
-                      "  狀態 → /status\n" +
-                      "  地圖 → /map\n" +
-                      "  物品 → /inventory\n" +
-                      "  進度 → /progress\n" +
-                      "  進度詳情 → /pd\n" +
-                      "  離開 → /quit")
+            new Markup("")
         );
 
         var panel = new Panel(grid)
@@ -870,34 +852,6 @@ public sealed class SpectreConsoleGame
         AnsiConsole.WriteLine();
 
         AnsiConsole.MarkupLine("[dim]提示：輸入 [bold]/commands[/] 查看完整指令列表與詳細說明[/]");
-        AnsiConsole.MarkupLine("[dim]      中文快捷：看、去、檢查、進度、離開[/]");
     }
 
-    private static string ConvertChineseShortcut(string input)
-    {
-        // Convert Chinese commands to their /command equivalents
-        // Handle both standalone commands and commands with arguments
-        if (input.StartsWith("去"))
-        {
-            return input.Length > 1 ? $"/go{input[1..]}" : "/go";
-        }
-        if (input.StartsWith("說"))
-        {
-            return input.Length > 1 ? $"/say{input[1..]}" : "/say";
-        }
-        if (input.StartsWith("檢查"))
-        {
-            return input.Length > 2 ? $"/examine{input[2..]}" : "/examine";
-        }
-        if (input.Equals("離開"))
-        {
-            return "/quit";
-        }
-        if (input.Equals("進度"))
-        {
-            return "/progress";
-        }
-
-        return input;
-    }
 }
