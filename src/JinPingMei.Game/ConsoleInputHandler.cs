@@ -102,14 +102,20 @@ internal sealed class ConsoleInputHandler
                     // Navigate to previous command in history
                     if (_commandHistory.Count > 0 && _historyIndex > 0)
                     {
+                        string savedInput = string.Empty;
+
                         // Save current input if we're at the end of history
                         if (_historyIndex == _commandHistory.Count)
                         {
-                            _buffer.TryDrain(out _currentInput);
+                            // Save the current text before clearing
+                            _buffer.TryDrain(out savedInput);
+                            _currentInput = savedInput;
                         }
 
                         // Move to previous command
                         _historyIndex--;
+
+                        // Replace current line with history entry
                         ReplaceCurrentLine(_commandHistory[_historyIndex]);
                     }
                     break;
@@ -321,12 +327,17 @@ internal sealed class ConsoleInputHandler
         // Get current display width BEFORE clearing the buffer
         var currentLength = _buffer.GetDisplayWidth();
 
-        // Clear current line on screen
+        // Also check if there's anything visible on screen that the buffer doesn't know about
+        // This handles the case where we've already drained the buffer but text is still visible
         var currentPos = Console.GetCursorPosition();
+        var visibleLength = currentPos.Left - _promptDisplayWidth;
+        var lengthToClear = Math.Max(currentLength, visibleLength);
+
+        // Clear current line on screen
         Console.SetCursorPosition(_promptDisplayWidth, currentPos.Top);
-        if (currentLength > 0)
+        if (lengthToClear > 0)
         {
-            Console.Write(new string(' ', currentLength));
+            Console.Write(new string(' ', lengthToClear));
             Console.SetCursorPosition(_promptDisplayWidth, currentPos.Top);
         }
 
