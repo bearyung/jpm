@@ -12,21 +12,8 @@ public sealed class HelpCommandHandler : ICommandHandler
 
     public CommandResult Handle(CommandContext context, string arguments)
     {
-        // Quick reference - just the essential commands
-        var lines = new List<string>
-        {
-            "快速指令參考：",
-            "  /look (/l)     - 查看周圍環境",
-            "  /go <地點> (/g) - 前往地點",
-            "  /status (/s)   - 玩家狀態",
-            "  /map (/m)      - 地圖與出口",
-            "  /say <內容>    - 說話",
-            "  /quit (/q)     - 離開遊戲",
-            "",
-            "輸入 /commands 查看完整指令分類說明"
-        };
-
-        return new CommandResult(lines, false);
+        // Return special marker for SpectreConsoleGame to render with CLI-style formatting
+        return CommandResult.FromMessage("[HELP_DISPLAY]");
     }
 }
 

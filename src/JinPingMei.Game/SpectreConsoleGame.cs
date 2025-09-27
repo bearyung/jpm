@@ -230,12 +230,21 @@ public sealed class SpectreConsoleGame
                 continue;
             }
 
-            // Check for GO_SELECT_DISPLAY marker
-            if (commandResult.Lines.Count == 1 && commandResult.Lines[0] == "[GO_SELECT_DISPLAY]")
+            // Check for special display markers
+            if (commandResult.Lines.Count == 1)
             {
-                HandleGoSelection();
-                needsPromptSpacing = true;
-                continue;
+                if (commandResult.Lines[0] == "[GO_SELECT_DISPLAY]")
+                {
+                    HandleGoSelection();
+                    needsPromptSpacing = true;
+                    continue;
+                }
+                else if (commandResult.Lines[0] == "[HELP_DISPLAY]")
+                {
+                    DisplayHelp();
+                    needsPromptSpacing = true;
+                    continue;
+                }
             }
 
             // Display response (skip special display markers)
@@ -524,62 +533,53 @@ public sealed class SpectreConsoleGame
             return;
         }
 
-        // Get progress data and show full panel
+        // Get progress data and display in waterfall format
         var progressData = story.GetProgressData();
-        var panel = BuildProgressPanel(progressData);
-        AnsiConsole.Write(panel);
+        DisplayProgressDetailWaterfall(progressData);
     }
 
-    private Panel BuildProgressPanel(StoryProgressData progressData)
+    private void DisplayProgressDetailWaterfall(StoryProgressData progressData)
     {
-        // Create a grid to organize all information
-        var mainGrid = new Grid();
-        mainGrid.AddColumn();
+        AnsiConsole.WriteLine();
 
         // Section 1: Volume and Episode Info
-        mainGrid.AddRow(new Rule("【當前進度】").RuleStyle("cyan"));
-        mainGrid.AddRow(new Markup($"[bold cyan]{progressData.VolumeTitle}[/] - [dim]{progressData.EpisodeLabel}[/]"));
-        mainGrid.AddRow(new Markup($"宿主：[yellow]{progressData.HostId ?? "未選擇"}[/]"));
-        mainGrid.AddEmptyRow();
+        AnsiConsole.MarkupLine("[bold cyan]【當前進度】[/]");
+        AnsiConsole.MarkupLine($"[bold]{progressData.VolumeTitle}[/] - [dim]{progressData.EpisodeLabel}[/]");
+        AnsiConsole.MarkupLine($"宿主：[yellow]{progressData.HostId ?? "未選擇"}[/]");
+        AnsiConsole.WriteLine();
 
         // Section 2: Chapter Progress
-        mainGrid.AddRow(new Rule("【章節資訊】").RuleStyle("cyan"));
+        AnsiConsole.MarkupLine("[bold cyan]【章節資訊】[/]");
         if (progressData.CurrentChapterNumber > 0)
         {
-            mainGrid.AddRow(new Markup($"[bold]第{progressData.CurrentChapterNumber}回[/]"));
+            AnsiConsole.MarkupLine($"[bold]第{progressData.CurrentChapterNumber}回[/]");
             if (progressData.ChapterTitles?.Count > 0)
             {
                 foreach (var title in progressData.ChapterTitles)
                 {
-                    mainGrid.AddRow(new Markup($"  [italic]{title}[/]"));
+                    AnsiConsole.MarkupLine($"  [italic]{title}[/]");
                 }
             }
-            mainGrid.AddRow(new Markup($"進度：第 {progressData.CurrentChapterIndex + 1} 章 / 共 {progressData.TotalChapters} 章"));
+            AnsiConsole.MarkupLine($"進度：第 {progressData.CurrentChapterIndex + 1} 章 / 共 {progressData.TotalChapters} 章");
 
             if (progressData.CurrentSceneTitle != null)
             {
-                mainGrid.AddEmptyRow();
-                mainGrid.AddRow(new Markup($"[bold]當前場景：[/]{progressData.CurrentSceneTitle} ({progressData.CurrentSceneIndex + 1}/{progressData.TotalScenesInChapter})"));
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine($"[bold]當前場景：[/]{progressData.CurrentSceneTitle} ({progressData.CurrentSceneIndex + 1}/{progressData.TotalScenesInChapter})");
                 if (progressData.CurrentBeatProgress != null)
                 {
-                    mainGrid.AddRow(new Markup($"節拍進度：{progressData.CurrentBeatProgress}"));
+                    AnsiConsole.MarkupLine($"節拍進度：{progressData.CurrentBeatProgress}");
                 }
             }
         }
         else
         {
-            mainGrid.AddRow(new Markup("[dim]尚未開始[/]"));
+            AnsiConsole.MarkupLine("[dim]尚未開始[/]");
         }
-        mainGrid.AddEmptyRow();
+        AnsiConsole.WriteLine();
 
         // Section 3: Mission Progress
-        mainGrid.AddRow(new Rule("【任務狀態】").RuleStyle("cyan"));
-
-        var missionTable = new Table()
-            .Border(TableBorder.None)
-            .HideHeaders()
-            .AddColumn(new TableColumn("").Width(4))
-            .AddColumn(new TableColumn(""));
+        AnsiConsole.MarkupLine("[bold cyan]【任務狀態】[/]");
 
         if (progressData.CurrentChapterMissions?.Count > 0)
         {
@@ -601,45 +601,32 @@ public sealed class SpectreConsoleGame
                     _ => mission.Title
                 };
 
-                missionTable.AddRow(statusIcon, titleMarkup);
+                AnsiConsole.MarkupLine($"  {statusIcon} {titleMarkup}");
 
                 if (mission.Status == MissionStatus.InProgress && !string.IsNullOrWhiteSpace(mission.Description))
                 {
-                    missionTable.AddRow("", $"[dim italic]  {mission.Description}[/]");
+                    AnsiConsole.MarkupLine($"     [dim italic]{mission.Description}[/]");
                 }
             }
         }
         else
         {
-            missionTable.AddRow("", "[dim]無任務[/]");
+            AnsiConsole.MarkupLine("  [dim]無任務[/]");
         }
+        AnsiConsole.WriteLine();
 
-        mainGrid.AddRow(missionTable);
-        mainGrid.AddEmptyRow();
+        // Section 4: Overall Statistics
+        AnsiConsole.MarkupLine("[bold cyan]【總體統計】[/]");
+        AnsiConsole.MarkupLine($"總任務進度：{progressData.CompletedMissions}/{progressData.TotalMissions} ([yellow]{progressData.OverallProgress}%[/])");
 
-        // Section 4: Statistics
-        mainGrid.AddRow(new Rule("【整體統計】").RuleStyle("cyan"));
-
-        // Create a simple progress display
-        var chapterPercent = Math.Min(100, Math.Max(0, (int)progressData.ChapterProgress));
-        var missionPercent = Math.Min(100, Math.Max(0, (int)progressData.MissionProgress));
-
-        mainGrid.AddRow(new Markup($"章節進度：[cyan]{CreateProgressBar(chapterPercent)}[/] {chapterPercent}%"));
-        mainGrid.AddRow(new Markup($"任務進度：[green]{CreateProgressBar(missionPercent)}[/] {missionPercent}%"));
-        mainGrid.AddRow(new Markup($"[dim]已完成 {progressData.CompletedMissions}/{progressData.TotalMissions} 個任務[/]"));
-
-        // Section 5: Footer
-        mainGrid.AddEmptyRow();
-        mainGrid.AddRow(new Rule().RuleStyle("dim"));
-
-        // Wrap everything in a single panel
-        return new Panel(mainGrid)
+        if (progressData.CurrentChapterMissions?.Count > 0)
         {
-            Header = new PanelHeader(" 遊戲進度 "),
-            Border = BoxBorder.Rounded,
-            Padding = new Padding(2, 1),
-            Expand = false
-        };
+            var inProgress = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.InProgress);
+            var locked = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.Locked);
+            var completed = progressData.CurrentChapterMissions.Count(m => m.Status == MissionStatus.Completed);
+
+            AnsiConsole.MarkupLine($"[dim]進行中: {inProgress} | 已完成: {completed} | 未解鎖: {locked}[/]");
+        }
     }
 
     private static void WaitForQuitKey()
@@ -652,14 +639,6 @@ public sealed class SpectreConsoleGame
                 break;
             }
         }
-    }
-
-    private static string CreateProgressBar(int percentage)
-    {
-        const int barLength = 20;
-        var filled = (int)(barLength * (percentage / 100.0));
-        var empty = barLength - filled;
-        return new string('█', filled) + new string('░', empty);
     }
 
     private void DisplayCommands()
@@ -758,6 +737,68 @@ public sealed class SpectreConsoleGame
         AnsiConsole.Write(panel);
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine("[dim]提示：使用 /help 或 /h 查看快速指令參考[/]");
+    }
+
+    private void DisplayHelp()
+    {
+        // Display CLI-style help in a format similar to Unix man pages
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("[bold underline]JINGPINGMEI(1)[/]                    User Commands                    [bold underline]JINGPINGMEI(1)[/]");
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("[bold]NAME[/]");
+        AnsiConsole.MarkupLine("       金瓶梅 - 互動式文字冒險遊戲");
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("[bold]SYNOPSIS[/]");
+        AnsiConsole.MarkupLine("       [cyan]/command[/] [[dim]options[/]] [[dim]arguments[/]]");
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("[bold]DESCRIPTION[/]");
+        AnsiConsole.MarkupLine("       在明朝清河城中體驗經典故事，透過指令進行遊戲。");
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("[bold]ESSENTIAL COMMANDS[/]");
+
+        // Create a table for commands with better alignment
+        var table = new Table()
+            .Border(TableBorder.None)
+            .HideHeaders()
+            .AddColumn(new TableColumn("Command").Width(20))
+            .AddColumn(new TableColumn("Alias").Width(15))
+            .AddColumn(new TableColumn("Description"));
+
+        table.AddRow("[cyan]/look[/]", "[dim]l, 看[/]", "查看周圍環境");
+        table.AddRow("[cyan]/go[/] [dim]<location>[/]", "[dim]g, 去[/]", "前往指定地點（無參數時顯示選單）");
+        table.AddRow("[cyan]/status[/]", "[dim]s, 狀態[/]", "查看玩家狀態");
+        table.AddRow("[cyan]/map[/]", "[dim]m, 地圖[/]", "顯示地圖與可用出口");
+        table.AddRow("[cyan]/inventory[/]", "[dim]i, inv, 物品[/]", "查看物品欄");
+        table.AddRow("[cyan]/say[/] [dim]<text>[/]", "[dim]說[/]", "說出對話");
+        table.AddRow("[cyan]/examine[/] [dim]<target>[/]", "[dim]x, 檢查[/]", "仔細檢查目標");
+        table.AddEmptyRow();
+        table.AddRow("[cyan]/host[/] [dim]<character>[/]", "[dim]宿主[/]", "選擇故事宿主角色");
+        table.AddRow("[cyan]/progress[/]", "[dim]p, 進度[/]", "顯示進度摘要");
+        table.AddRow("[cyan]/progress detail[/]", "[dim]pd, 進度詳情[/]", "顯示詳細任務列表");
+        table.AddEmptyRow();
+        table.AddRow("[cyan]/commands[/]", "[dim]cmd[/]", "顯示完整指令分類");
+        table.AddRow("[cyan]/help[/]", "[dim]h, ?[/]", "顯示此說明");
+        table.AddRow("[cyan]/quit[/]", "[dim]q, 離開[/]", "離開遊戲");
+
+        AnsiConsole.Write(table);
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("[bold]EXAMPLES[/]");
+        AnsiConsole.MarkupLine("       [cyan]/go[/]          # 顯示可前往地點的選單");
+        AnsiConsole.MarkupLine("       [cyan]/go 西廂房[/]   # 直接前往西廂房");
+        AnsiConsole.MarkupLine("       [cyan]/pd[/]          # 查看當前章節的任務進度");
+        AnsiConsole.MarkupLine("       [cyan]去[/]            # 中文快捷，等同於 /go");
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("[bold]SEE ALSO[/]");
+        AnsiConsole.MarkupLine("       輸入 [cyan]/commands[/] 查看按類別組織的完整指令說明");
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("[dim]Jin Ping Mei Game v1.0                     2024                    JINGPINGMEI(1)[/]");
     }
 
     private static string ConvertChineseShortcut(string input)

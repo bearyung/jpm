@@ -119,7 +119,6 @@ public sealed class GameSession
         var handlers = new List<ICommandHandler>
         {
             new HostCommandHandler(),
-            new StoryStatusCommandHandler(),
             new ProgressCommandHandler()
         };
 
