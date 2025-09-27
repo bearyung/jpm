@@ -750,88 +750,46 @@ public sealed class SpectreConsoleGame
 
     private void DisplayCommands()
     {
-        var grid = new Grid()
-            .AddColumn()
-            .AddColumn()
-            .AddColumn();
+        // Display header
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("[bold yellow]完整指令說明[/]");
+        AnsiConsole.WriteLine();
 
-        // Detailed command categories with full descriptions
-        grid.AddRow(
-            "[bold underline cyan]基本指令[/]",
-            "[bold underline cyan]探索指令[/]",
-            "[bold underline cyan]資訊指令[/]"
-        );
+        // Basic commands section
+        AnsiConsole.MarkupLine("[bold cyan]基本指令[/]");
+        AnsiConsole.MarkupLine("  [green]/help[/]        ([dim]h[/])    - 快速指令參考");
+        AnsiConsole.MarkupLine("  [green]/say[/] <內容>         - 對周圍說話");
+        AnsiConsole.MarkupLine("  [green]/name[/] <名字>        - 設定你的角色名稱");
+        AnsiConsole.WriteLine();
 
-        grid.AddRow(
-            new Markup("[green]/help[/] [dim]([/][dim green]/h[/][dim])[/]\n" +
-                      "  快速指令參考\n\n" +
-                      "[green]/say <內容>[/]\n" +
-                      "  對周圍說話\n\n" +
-                      "[green]/name <名字>[/]\n" +
-                      "  設定你的角色名稱"),
-            new Markup("[yellow]/look[/] [dim]([/][dim yellow]/l[/][dim])[/]\n" +
-                      "  查看場景描述、人物與出口\n\n" +
-                      "[yellow]/go <地點>[/] [dim]([/][dim yellow]/g[/][dim])[/]\n" +
-                      "  前往指定地點\n\n" +
-                      "[yellow]/examine <目標>[/] [dim]([/][dim yellow]/ex[/][dim])[/]\n" +
-                      "  仔細檢查人物或場景"),
-            new Markup("[blue]/status[/] [dim]([/][dim blue]/s[/][dim])[/]\n" +
-                      "  顯示玩家狀態與進度\n\n" +
-                      "[blue]/map[/] [dim]([/][dim blue]/m[/][dim])[/]\n" +
-                      "  顯示區域地圖結構\n\n" +
-                      "[blue]/inventory[/] [dim]([/][dim blue]/i[/][dim])[/]\n" +
-                      "  查看攜帶物品清單")
-        );
+        // Exploration commands section
+        AnsiConsole.MarkupLine("[bold cyan]探索指令[/]");
+        AnsiConsole.MarkupLine("  [yellow]/look[/]        ([dim]l[/])    - 查看場景描述、人物與出口");
+        AnsiConsole.MarkupLine("  [yellow]/go[/] <地點>    ([dim]g[/])    - 前往指定地點");
+        AnsiConsole.MarkupLine("  [yellow]/examine[/] <目標> ([dim]ex[/]) - 仔細檢查人物或場景");
+        AnsiConsole.WriteLine();
 
-        grid.AddEmptyRow();
+        // Information commands section
+        AnsiConsole.MarkupLine("[bold cyan]資訊指令[/]");
+        AnsiConsole.MarkupLine("  [blue]/status[/]      ([dim]s[/])    - 顯示玩家狀態與進度");
+        AnsiConsole.MarkupLine("  [blue]/map[/]         ([dim]m[/])    - 顯示區域地圖結構");
+        AnsiConsole.MarkupLine("  [blue]/inventory[/]   ([dim]i[/])    - 查看攜帶物品清單");
+        AnsiConsole.WriteLine();
 
-        // Story and Progress commands
-        grid.AddRow(
-            "[bold underline cyan]劇情與進度[/]",
-            "",
-            ""
-        );
-
-        grid.AddRow(
-            new Markup("[cyan]/host <角色>[/]\n" +
-                      "  選擇故事宿主"),
-            new Markup("[cyan]/progress[/] [dim]([/][dim cyan]/p[/][dim])[/]\n" +
-                      "  查看進度摘要\n\n" +
-                      "[cyan]/progress detail[/] [dim]([/][dim cyan]/pd[/][dim])[/]\n" +
-                      "  查看詳細任務列表"),
-            new Markup("")
-        );
-
-        grid.AddEmptyRow();
+        // Story and Progress commands section
+        AnsiConsole.MarkupLine("[bold cyan]劇情與進度[/]");
+        AnsiConsole.MarkupLine("  [cyan]/host[/] <角色>        - 選擇故事宿主");
+        AnsiConsole.MarkupLine("  [cyan]/progress[/]    ([dim]p[/])    - 查看進度摘要");
+        AnsiConsole.MarkupLine("  [cyan]/progress detail[/] ([dim]pd[/]) - 查看詳細任務列表");
+        AnsiConsole.WriteLine();
 
         // System commands section
-        grid.AddRow(
-            "[bold underline cyan]系統指令[/]",
-            "",
-            ""
-        );
-
-        grid.AddRow(
-            new Markup("[magenta]/clear[/]\n" +
-                      "  清除畫面重新開始\n\n" +
-                      "[magenta]/commands[/] [dim]([/][dim magenta]/cmd[/][dim])[/]\n" +
-                      "  顯示此詳細說明\n\n" +
-                      "[red]/quit[/] [dim]([/][dim red]/q[/][dim])[/]\n" +
-                      "  離開遊戲"),
-            new Markup(""),
-            new Markup("")
-        );
-
-        var panel = new Panel(grid)
-        {
-            Header = new PanelHeader("完整指令說明"),
-            Border = BoxBorder.Rounded,
-            Padding = new Padding(1, 0),
-            Expand = false
-        };
-
-        AnsiConsole.Write(panel);
+        AnsiConsole.MarkupLine("[bold cyan]系統指令[/]");
+        AnsiConsole.MarkupLine("  [magenta]/clear[/]              - 清除畫面重新開始");
+        AnsiConsole.MarkupLine("  [magenta]/commands[/]    ([dim]cmd[/])  - 顯示此詳細說明");
+        AnsiConsole.MarkupLine("  [red]/quit[/]        ([dim]q[/])    - 離開遊戲");
         AnsiConsole.WriteLine();
+
         AnsiConsole.MarkupLine("[dim]提示：使用 /help 或 /h 查看快速指令參考[/]");
     }
 
