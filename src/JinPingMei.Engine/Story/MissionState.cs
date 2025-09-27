@@ -8,13 +8,24 @@ public sealed class MissionState
     public MissionState(ObjectiveDefinition definition)
     {
         Definition = definition ?? throw new ArgumentNullException(nameof(definition));
-        // Main missions are unlocked by default, side quests need to be unlocked
-        IsUnlocked = definition.Category?.ToLowerInvariant() switch
+
+        // Check if there's an Availability configuration
+        if (definition.Availability != null)
         {
-            "optional" => false,
-            "bonus" => false,
-            _ => true
-        };
+            // Honor the explicit DefaultState from Availability
+            IsUnlocked = definition.Availability.DefaultState?.ToLowerInvariant() != "locked";
+        }
+        else
+        {
+            // Preserve backward compatibility: Optional and Bonus missions are locked by default
+            // Story missions and others are unlocked by default
+            IsUnlocked = definition.Category?.ToLowerInvariant() switch
+            {
+                "optional" => false,
+                "bonus" => false,
+                _ => true
+            };
+        }
     }
 
     public ObjectiveDefinition Definition { get; }

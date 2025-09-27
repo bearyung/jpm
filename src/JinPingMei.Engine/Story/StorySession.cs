@@ -727,28 +727,47 @@ public sealed class StorySession
 
     private void EvaluateMissions(out IReadOnlyList<string> messages)
     {
-        var completedMessages = new List<string>();
+        var outputMessages = new List<string>();
+
         foreach (var mission in _missions.Values)
         {
-            // Only check unlocked missions that aren't completed
-            if (!mission.IsUnlocked || mission.IsCompleted)
+            // First check if locked missions should be unlocked
+            if (!mission.IsUnlocked && mission.Definition.Availability?.UnlockConditions?.Count > 0)
             {
-                continue;
+                if (CheckUnlockConditions(mission.Definition.Availability.UnlockConditions))
+                {
+                    mission.Unlock();
+                    outputMessages.Add($"解鎖任務：{mission.Definition.Title}");
+                }
             }
 
-            if (CheckMissionCompletion(mission.Definition))
+            // Then check if unlocked missions are completed
+            if (mission.IsUnlocked && !mission.IsCompleted)
             {
-                mission.MarkComplete();
-                completedMessages.Add($"任務完成：{mission.Definition.Title}");
+                if (CheckMissionCompletion(mission.Definition))
+                {
+                    mission.MarkComplete();
+                    outputMessages.Add($"任務完成：{mission.Definition.Title}");
+                }
             }
         }
 
-        messages = completedMessages;
+        messages = outputMessages;
     }
 
     private bool CheckMissionCompletion(ObjectiveDefinition objective)
     {
-        foreach (var condition in objective.Completion)
+        return CheckConditions(objective.Completion);
+    }
+
+    private bool CheckUnlockConditions(IReadOnlyList<ObjectiveCompletionCondition> conditions)
+    {
+        return CheckConditions(conditions);
+    }
+
+    private bool CheckConditions(IReadOnlyList<ObjectiveCompletionCondition> conditions)
+    {
+        foreach (var condition in conditions)
         {
             switch (condition.Type.ToLowerInvariant())
             {
@@ -760,6 +779,12 @@ public sealed class StorySession
                     break;
                 case "inventory":
                     if (!EvaluateInventoryCondition(condition))
+                    {
+                        return false;
+                    }
+                    break;
+                case "mission":
+                    if (!EvaluateMissionCondition(condition))
                     {
                         return false;
                     }
@@ -874,6 +899,22 @@ public sealed class StorySession
         }
 
         return value.CompareTo(operand);
+    }
+
+    private bool EvaluateMissionCondition(ObjectiveCompletionCondition condition)
+    {
+        if (string.IsNullOrWhiteSpace(condition.Id))
+        {
+            return false;
+        }
+
+        // Check if the specified mission is completed
+        if (_missions.TryGetValue(condition.Id, out var mission))
+        {
+            return mission.IsCompleted;
+        }
+
+        return false;
     }
 
     private bool EvaluateInventoryCondition(ObjectiveCompletionCondition condition)
