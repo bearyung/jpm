@@ -751,7 +751,7 @@ public sealed class SpectreConsoleGame
         AnsiConsole.WriteLine();
 
         AnsiConsole.MarkupLine("[bold]SYNOPSIS[/]");
-        AnsiConsole.MarkupLine("       [cyan]/command[/] [[dim]options[/]] [[dim]arguments[/]]");
+        AnsiConsole.MarkupLine("       [cyan]/command[/] [dim][[options]][/] [dim][[arguments]][/]");
         AnsiConsole.WriteLine();
 
         AnsiConsole.MarkupLine("[bold]DESCRIPTION[/]");
