@@ -198,10 +198,11 @@ internal sealed class ConsoleInputHandler
 
                             case ConsoleKey.E:
                                 // Ctrl+E - Move to end of line (same as End)
+                                // Get the width we need to move BEFORE moving the cursor
+                                var widthToEnd = _buffer.GetDisplayWidthAfterCursor();
                                 _buffer.MoveCursorToEnd();
                                 var ctrlEPos = Console.GetCursorPosition();
-                                var ctrlETotalWidth = _buffer.GetDisplayWidthAfterCursor();
-                                Console.SetCursorPosition(ctrlEPos.Left + ctrlETotalWidth, ctrlEPos.Top);
+                                Console.SetCursorPosition(ctrlEPos.Left + widthToEnd, ctrlEPos.Top);
                                 break;
 
                             case ConsoleKey.K:
@@ -440,9 +441,11 @@ internal sealed class ConsoleInputHandler
             }
         }
 
-        // Update buffer
+        // Update buffer and restore cursor position correctly
         _buffer.TryDrain(out _);
-        foreach (var c in newText + afterText)
+
+        // First add the kept prefix
+        foreach (var c in newText)
         {
             if (System.Text.Rune.TryCreate(c, out var rune))
             {
@@ -450,8 +453,21 @@ internal sealed class ConsoleInputHandler
             }
         }
 
-        // Move cursor to end of newText
-        for (int i = 0; i < newText.Length; i++)
+        // Remember where cursor should be (at end of newText)
+        var cursorPosition = _buffer.CursorPosition;
+
+        // Then add the text after cursor
+        foreach (var c in afterText)
+        {
+            if (System.Text.Rune.TryCreate(c, out var rune))
+            {
+                _buffer.Append(rune);
+            }
+        }
+
+        // Move cursor back to the correct position (end of newText)
+        // Need to move by the number of grapheme clusters in afterText
+        while (_buffer.CursorPosition > cursorPosition)
         {
             _buffer.MoveCursorLeft(out _);
         }
